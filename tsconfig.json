@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "isolatedModules": false,
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "sourceMap": true,
+    },
+    "compileOnSave": false,
+    "include": [
+        "./src/**/*",
+        // "./engine/src/**/*"
+    ],
+    "files": [
+        // "../../typings/globals/decimal.js/index.d.ts",
+        "./lib/ts/es6-promise/index.d.ts",
+        "./lib/ts/pixi.js/index.d.ts"
+        // "../../typings/globals/howler/index.d.ts",
+        // "../../typings/globals/tween.js/index.d.ts",
+        // "./engine/lib/dts/pixi-spine.d.ts"
+    ]
+}
