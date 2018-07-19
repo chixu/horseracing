@@ -63,14 +63,17 @@ export class Socket {
 
             //Message Receved
             websocket.onmessage = (ev) => {
-                console.log('Message ' + ev.data);
                 try {
                     let d = JSON.parse(ev.data);
                     if (d.c) {
                         let cb = this.callbacks[d.c];
                         this.prevData = d.data;
-                        if (cb)
+                        if (cb) {
                             cb(d.data);
+                            console.log('Message ' + ev.data);
+                        } else {
+                            console.log('Message ' + ev.data, ' no callback');
+                        }
                     }
                 } catch (e) {
 

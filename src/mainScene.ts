@@ -45,7 +45,6 @@ export class MainScene extends Scene {
     //inited: boolean = false;
     static renderHorse = true;
     autoPlay: number;
-    playersData: any;
 
     constructor(num) {
         super();
@@ -97,14 +96,7 @@ export class MainScene extends Scene {
 
     getData() {
         let dataAdapter = new LocalDataAdapter(this);
-        let getdata: Promise<any>;
-        if (MainScene.gameMode == GameMode.Multi) {
-            let prevData = director.socket.prevData;
-            getdata = dataAdapter.getData(prevData.id, prevData.i);
-            this.playersData = prevData.u;
-        } else
-            getdata = dataAdapter.getData();
-        return getdata.then(datas => {
+        return dataAdapter.getData().then(datas => {
             console.log(datas);
             this.tracks[0].setDatas();
             let i = 0;
@@ -132,22 +124,8 @@ export class MainScene extends Scene {
         this.scoreLabel.value = '总市值: ' + this.totalAmount.toFixed(2);
     }
 
-    enter(args?) {
-        // this.init();
-        if (MainScene.gameMode == GameMode.Multi) {
-            director.socket.on(Command.gameOver, (data) => {
-                this.gameOver();
-            });
-            // director.socket.on(Command.gameInfo, (data) => {
-            //     this.playersData = data;
-            //     this.renderPlayers();
-            // });
-            director.socket.on(Command.nextRound, (data) => {
-                this.playersData = data;
-                this.next();
-            });
-        }
-    }
+    // enter(args?) {
+    // }
 
     init(useOldData = false) {
         this.cash = START_CASH;
@@ -198,8 +176,27 @@ export class MainScene extends Scene {
         this.next();
         if (MainScene.gameMode == GameMode.Auto)
             this.autoPlay = setInterval(() => this.next(), 3000);
-        else if (MainScene.gameMode == GameMode.Multi)
-            setTimeout(() => { director.socket.send(Command.nextRound, { r: this.round, s: this.profit }) }, 3000);
+    }
+
+    renderNext() {
+        let max = 0, min = 0, hmax = 0, hmin = 0;
+        for (let i = this.tracks.length - 1; i >= 0; i--) {
+            let track: CandleTrack = this.tracks[i];
+            track.nextData();
+            max = Math.max(max, track.historyMax);
+            min = Math.min(min, track.historyMin);
+            // console.log(track.historyMin, track.historyMax)
+            hmax = Math.max(hmax, track.historyMax);
+            hmin = Math.min(hmin, track.historyMin);
+        }
+        // console.log(hmin, hmax);
+        this.axis.render(min, max);
+        this.sideAxis.render(hmin, hmax);
+        this.renderFrontAxis();
+        this.renderSideAxis();
+        this.renderPlayers();
+        this.updateScore();
+
     }
 
     next() {
@@ -207,30 +204,9 @@ export class MainScene extends Scene {
         this.enabled = true;
         if (this.round == this.totalRound) {
             clearInterval(this.autoPlay);
-            if (MainScene.gameMode != GameMode.Multi)
-                director.socket.send(Command.gameOver);
-            else
-                this.gameOver();
+            this.gameOver();
         } else {
-            if (MainScene.gameMode == GameMode.Multi)
-                setTimeout(() => { director.socket.send(Command.nextRound, { r: this.round, s: this.profit }) }, 3000);
-            let max = 0, min = 0, hmax = 0, hmin = 0;
-            for (let i = this.tracks.length - 1; i >= 0; i--) {
-                let track: CandleTrack = this.tracks[i];
-                track.nextData();
-                max = Math.max(max, track.historyMax);
-                min = Math.min(min, track.historyMin);
-                // console.log(track.historyMin, track.historyMax)
-                hmax = Math.max(hmax, track.historyMax);
-                hmin = Math.min(hmin, track.historyMin);
-            }
-            console.log(hmin, hmax);
-            this.axis.render(min, max);
-            this.sideAxis.render(hmin, hmax);
-            this.renderFrontAxis();
-            this.renderSideAxis();
-            this.renderPlayers();
-            this.updateScore();
+            this.renderNext();
         }
     }
 
@@ -249,13 +225,9 @@ export class MainScene extends Scene {
     }
 
     renderPlayers() {
-        if (MainScene.gameMode == GameMode.Multi) {
-            this.axis.renderPlayers();
-            this.sideAxis.renderPlayers();
-        }
     }
 
-    gameOver() {
+    renderGameOverUi() {
         if (this.winPanel == undefined) {
             this.winPanel = new PIXI.Container;
         }
@@ -294,7 +266,12 @@ export class MainScene extends Scene {
         let l1 = new Label("恭喜你", { fontSize: 50 });
         this.winPanel.addChild(l1);
         l1.position.set(director.config.width / 2, 50);
-        let percent = this.totalAmount / START_CASH - 1;
+    }
+
+    gameOver(data?) {
+        this.renderGameOverUi();
+        console.log('single');
+        // let percent = this.totalAmount / START_CASH - 1;
         // console.log('percent', percent);
         //let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n击败了${(1 / (1 + Math.pow(2, -30 * percent)) * 100).toFixed(2)}%的玩家`, { fontSize: 40 });
 
@@ -319,7 +296,7 @@ export class MainScene extends Scene {
         this.winPanel.addChild(l3);
         l3.position.set(director.config.width / 2, 410);
 
-        let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n排名第${playerRank}`, { fontSize: 40 });
+        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n排名第${playerRank}`, { fontSize: 40 });
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
 
@@ -403,11 +380,5 @@ export class MainScene extends Scene {
         this.renderFrontAxis();
         if (MainScene.gameMode == GameMode.Normal)
             this.next();
-    }
-
-    exit() {
-        // director.socket.off(Command.gameInfo);
-        director.socket.off(Command.gameOver);
-        director.socket.off(Command.nextRound);
     }
 }

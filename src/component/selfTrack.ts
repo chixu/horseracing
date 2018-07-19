@@ -39,7 +39,7 @@ export class SelfTrack extends CandleTrack {
             this.datas.push(0);
         }
         this.dataIndex = this.numHistoryPoints - 1;
-        this.focus = false;
+        this.focus = true;
     }
 
     nextData() {

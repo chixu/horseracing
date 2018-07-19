@@ -5,7 +5,7 @@ import { Scene } from "./core/scene";
 import * as director from "./core/director";
 import { Command } from "./core/socket";
 import { MultiPlayerScene } from "./multiPlayerScene";
-import { MainScene, GameMode } from "./mainScene";
+import { MultiMainScene } from "./multiMainScene";
 
 export class RoomScene extends Scene {
     playerContainer: PIXI.Container;
@@ -46,8 +46,8 @@ export class RoomScene extends Scene {
                 this.renderPlayers(data);
         });
         director.socket.on(Command.startGame, (data) => {
-            MainScene.gameMode = GameMode.Multi;
-            director.sceneManager.replace(new MainScene(data.n));
+            // MainScene.gameMode = GameMode.Multi;
+            director.sceneManager.replace(new MultiMainScene(data.n));
         });
     }
 

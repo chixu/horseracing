@@ -16,5 +16,8 @@ export function randomArray(arr: any[]) {
     return a;
 }
 
+export function toFixedNumber(n:number, decimalPoint){
+    return parseFloat(n.toFixed(decimalPoint));
+}
 
 
