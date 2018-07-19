@@ -1,4 +1,5 @@
 import { Label } from "../core/component/label";
+import { RectButton } from "../core/component/rectButton";
 import { Candle, CandleOption } from "./candle";
 import { MainScene } from "../mainScene";
 
@@ -17,10 +18,12 @@ export class Axis extends PIXI.Container {
     option: AxisOption;
     axisContainer: PIXI.Container;
     graphContainer: PIXI.Container;
+    playersContainer: PIXI.Container;
     zeroPosition: number;
     lineGap: number;
     mainScene: MainScene;
     heightRatio: number;
+
 
     constructor(opt: AxisOption, scene: MainScene) {
         super();
@@ -29,6 +32,8 @@ export class Axis extends PIXI.Container {
         this.addChild(this.axisContainer);
         this.graphContainer = new PIXI.Container();
         this.addChild(this.graphContainer);
+        this.playersContainer = new PIXI.Container();
+        this.addChild(this.playersContainer);
         this.option = opt;
         // this.render(opt);
     }
@@ -86,6 +91,28 @@ export class Axis extends PIXI.Container {
         this.render2(this.option);
     }
 
+
+
+    renderPlayers(d?) {
+        this.playersContainer.removeChildren();
+        d = d || this.mainScene.playersData;
+        for (let i = 0; i < d.length; i++) {
+            this.renderPlayer(d[i].n, d[i].s, 0x00ff00);
+        }
+        this.renderPlayer('你', this.mainScene.profit, 0xff0000);
+    }
+
+    renderPlayer(name, score,color){
+        let x = this.option.width / 2;
+        let b = new RectButton(60, 20, color);
+        b.textHeight = 16;
+        b.text = name;
+        b.y = -this.heightRatio * score + this.zeroPosition;
+        b.x = x + 20;
+        b.alpha = 0.7;
+        this.playersContainer.addChild(b);
+    }
+
     private render2(opt: AxisOption) {
         this.axisContainer.removeChildren();
         let unit = 5;
@@ -94,7 +121,7 @@ export class Axis extends PIXI.Container {
             unit *= 2;
             unitRes = this.tryUnit(opt, unit);
         }
-        console.log(unitRes);
+        // console.log(unitRes);
         let lineWidth = opt.lineWidth || 1;
         let color = opt.color == undefined ? 0xffffff : opt.color;
         let lines = unitRes.top - unitRes.btm + 1;

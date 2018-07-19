@@ -17,14 +17,14 @@ export class CandleTrack extends PIXI.Container {
     //buttonText: Label;
     datas = [];
     dataIndex: number;
-    static origDataIndex: number;
+    // static origDataIndex: number;
     min: number;
     max: number;
     open: number;
     close: number;
     mainScene: MainScene;
     index: number;
-    numHistoryPoints = 30;
+    numHistoryPoints;
     lineColor = 0xff0000;
     btnColor;
     historyMax: number;
@@ -35,14 +35,15 @@ export class CandleTrack extends PIXI.Container {
     stockName: string;
     startDate: Date;
     endDate: Date;
-    static dataDates: number[];
-    parsedData: any[];
+    // static dataDates: number[];
+    // parsedData: any[];
 
     constructor(mainScene: MainScene, index: number = 0) {
         super();
-        CandleTrack.origDataIndex = undefined;
-        CandleTrack.dataDates = undefined;
+        // CandleTrack.origDataIndex = undefined;
+        // CandleTrack.dataDates = undefined;
         this.mainScene = mainScene;
+        this.numHistoryPoints = mainScene.numHistoryPoints;
         this.index = index;
         this.lineColor = this.btnColor = CandleTrack.colors[index];
         this.candleContainer = new PIXI.Container;
@@ -82,26 +83,26 @@ export class CandleTrack extends PIXI.Container {
 
     setDatas(d?: any[], name?: string) {
         this.datas = d;
-        let numPts = this.numHistoryPoints + this.mainScene.totalRound;
-        if (CandleTrack.origDataIndex == undefined)
-            CandleTrack.origDataIndex = math.randomInteger(1, d.length - numPts);
-        this.dataIndex = this.numHistoryPoints - 1;
-        let dates = [];
-        for (let i = 0; i < numPts; i++) {
-            dates.push(d[CandleTrack.origDataIndex + i][0]);
-        }
-        if (CandleTrack.dataDates) {
-            let startDate = CandleTrack.dataDates[0];
-            let endDate = CandleTrack.dataDates[CandleTrack.dataDates.length - 1];
-            for (let i = 0; i < d.length; i++) {
-                let date = d[i];
-                if (startDate < date && date < endDate && CandleTrack.dataDates.indexOf(date) == -1) {
-                    array.insertAsc(CandleTrack.dataDates, date);
-                }
-            }
-        } else {
-            CandleTrack.dataDates = dates;
-        }
+        // let numPts = this.numHistoryPoints + this.mainScene.totalRound;
+        // if (CandleTrack.origDataIndex == undefined)
+        //     CandleTrack.origDataIndex = math.randomInteger(1, d.length - numPts);
+        // this.dataIndex = this.numHistoryPoints - 1;
+        // let dates = [];
+        // for (let i = 0; i < numPts; i++) {
+        //     dates.push(d[CandleTrack.origDataIndex + i][0]);
+        // }
+        // if (CandleTrack.dataDates) {
+        //     let startDate = CandleTrack.dataDates[0];
+        //     let endDate = CandleTrack.dataDates[CandleTrack.dataDates.length - 1];
+        //     for (let i = 0; i < d.length; i++) {
+        //         let date = d[i];
+        //         if (startDate < date && date < endDate && CandleTrack.dataDates.indexOf(date) == -1) {
+        //             array.insertAsc(CandleTrack.dataDates, date);
+        //         }
+        //     }
+        // } else {
+        //     CandleTrack.dataDates = dates;
+        // }
         // this.dataIndex = 10;
         // this.nextData();
         // this.dataIndex += this.numHistoryPoints;
@@ -110,30 +111,30 @@ export class CandleTrack extends PIXI.Container {
         // console.log(CandleTrack.dataDates.length, CandleTrack.dataDates);
     }
 
-    getDataByDate(date) {
-        for (let i = this.datas.length - 1; i >= 0; i--) {
-            let d = this.datas[i];
-            if (d[0] <= date)
-                return d;
-        }
-        return this.datas[0];
-    }
+    // getDataByDate(date) {
+    //     for (let i = this.datas.length - 1; i >= 0; i--) {
+    //         let d = this.datas[i];
+    //         if (d[0] <= date)
+    //             return d;
+    //     }
+    //     return this.datas[0];
+    // }
 
-    initData() {
-        if (this.parsedData == undefined) {
-            this.parsedData = [];
-            for (let i = 0; i < CandleTrack.dataDates.length; i++) {
-                this.parsedData.push(this.getDataByDate(CandleTrack.dataDates[i]));
-            }
-        }
-        // console.log(this.parsedData);
-    }
+    // initData() {
+    //     if (this.parsedData == undefined) {
+    //         this.parsedData = [];
+    //         for (let i = 0; i < CandleTrack.dataDates.length; i++) {
+    //             this.parsedData.push(this.getDataByDate(CandleTrack.dataDates[i]));
+    //         }
+    //     }
+    //     // console.log(this.parsedData);
+    // }
 
     nextData() {
         this.dataIndex++;
-        this.initData();
-        console.log(this.dataIndex);
-        let d = this.parsedData[this.dataIndex];
+        // this.initData();
+        // console.log(this.dataIndex);
+        let d = this.datas[this.dataIndex];
         //初始值是前一天收盘价
         if (this.open == undefined) {
             this.open = d[5];
@@ -155,7 +156,7 @@ export class CandleTrack extends PIXI.Container {
         // this.candle.setPosition(1);
         let hmax = this.close, hmin = this.close;
         for (let i = 1; i < this.numHistoryPoints; i++) {
-            let n = this.parsedData[this.dataIndex - i][5];
+            let n = this.datas[this.dataIndex - i][5];
             if (hmax < n) hmax = n;
             if (hmin > n) hmin = n;
         }
@@ -170,13 +171,13 @@ export class CandleTrack extends PIXI.Container {
     renderLine() {
         let pts = []
         for (let i = this.numHistoryPoints - 1; i >= 0; i--) {
-            pts.push(this.getRelativePercent(this.parsedData[this.dataIndex - i][5]));
+            pts.push(this.getRelativePercent(this.datas[this.dataIndex - i][5]));
         }
         this.mainScene.sideAxis.renderPoints(pts, this.lineColor);
     }
 
     renderCandle() {
-        let d = this.parsedData[this.dataIndex];
+        let d = this.datas[this.dataIndex];
         // this.candle = this.mainScene.axis.addCandle({
         //     min: this.min,
         //     open: d[2] / this.open * 100 - 100,

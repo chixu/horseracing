@@ -10,6 +10,7 @@ export class RectButton extends PIXI.Container {
     clickHandler;
     label: Label;
     border: PIXI.Graphics;
+    textHeight: number;
 
     constructor(w, h, color = 0xffffff) {
         super();
@@ -65,7 +66,7 @@ export class RectButton extends PIXI.Container {
 
     set text(v: string) {
         if (this.label == undefined) {
-            this.label = new Label("", { fontSize: this.rect.height / 2 });
+            this.label = new Label("", { fontSize: this.textHeight || this.rect.height / 2 });
             this.addChild(this.label);
         }
         this.label.value = v;

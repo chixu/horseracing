@@ -16,10 +16,7 @@ export class SelfTrack extends CandleTrack {
         // this.button.rect.tint = b ? 0x00ff00 : 0xff0000;
         this.button.text = '空仓';
         this.button.clickHandler = () => {
-            this.mainScene.unfocus();
-            this.focus = true;
-            this.mainScene.sell();
-            this.mainScene.next();
+            this.mainScene.onSelfClick(this);
         }
     }
 
@@ -92,7 +89,7 @@ export class SelfTrack extends CandleTrack {
             barColor: this.color,
             heightRatio: this.mainScene.axis.heightRatio
         });
-        console.log(this.min, this.max, this.open);
+        // console.log(this.min, this.max, this.open);
         this.candle.x = (-this.mainScene.numTracks / 2 + this.index) * this.mainScene.trackGap;
         this.mainScene.axis.addCandle(this.candle);
     }

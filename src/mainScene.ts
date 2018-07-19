@@ -1,8 +1,10 @@
 import { Scene } from "./core/scene";
 import { Candle } from "./component/candle";
 import * as director from "./core/director";
+import { Command } from "./core/socket";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
+import { LocalDataAdapter } from "./component/dataAdapter";
 import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/RectButton";
 import * as http from "./utils/http";
@@ -15,6 +17,10 @@ import { SelfTrack } from "./component/selfTrack";
 import { SinglePlayerScene } from "./singlePlayerScene";
 // import $ from "jquery";
 export const START_CASH = 100000;
+
+export const enum GameMode {
+    Multi, Auto, Normal
+}
 
 export class MainScene extends Scene {
     // container;
@@ -30,11 +36,16 @@ export class MainScene extends Scene {
     // skipButton: RectButton;
     round: number;
     readonly totalRound: number = 25;
+    readonly numHistoryPoints: number = 30;
     axis: Axis;
     sideAxis: Axis;
     winPanel: PIXI.Container;
+    static gameMode: GameMode = GameMode.Auto;
+    enabled: boolean;
     //inited: boolean = false;
     static renderHorse = true;
+    autoPlay: number;
+    playersData: any;
 
     constructor(num) {
         super();
@@ -85,26 +96,16 @@ export class MainScene extends Scene {
     }
 
     getData() {
-        let stockids = ['000002', '000651', '600519', '600690', '600887', '601398', '601857', '601988'];
-        //let url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ000651&begin=1512576000000&period=day&type=before&count=-142";
-        // console.log(math.randomArray(stockids));
-        stockids = math.randomArray(stockids)
-        let promise: Promise<any> = Promise.resolve();
-        let datas = {};
-        for (let i = 0; i < this.numTracks; i++) {
-            console.log(`/data/${stockids[i]}.json`);
-            promise = promise.then(() => {
-                return http.get(`/data/${stockids[i]}.json`).then(data => {
-                    let d = JSON.parse(data);
-                    // datas.push(d.data.item);
-                    datas[d.data.symbol] = d.data.item;
-                });
-            });
-        }
-        return promise.then(() => {
-            // for (let i = 0; i < this.tracks.length; i++) {
-            //     this.tracks[i].setDatas(i == 0 ? undefined : datas[i - 1]);
-            // }
+        let dataAdapter = new LocalDataAdapter(this);
+        let getdata: Promise<any>;
+        if (MainScene.gameMode == GameMode.Multi) {
+            let prevData = director.socket.prevData;
+            getdata = dataAdapter.getData(prevData.id, prevData.i);
+            this.playersData = prevData.u;
+        } else
+            getdata = dataAdapter.getData();
+        return getdata.then(datas => {
+            console.log(datas);
             this.tracks[0].setDatas();
             let i = 0;
             for (let k in datas) {
@@ -133,12 +134,26 @@ export class MainScene extends Scene {
 
     enter(args?) {
         // this.init();
+        if (MainScene.gameMode == GameMode.Multi) {
+            director.socket.on(Command.gameOver, (data) => {
+                this.gameOver();
+            });
+            // director.socket.on(Command.gameInfo, (data) => {
+            //     this.playersData = data;
+            //     this.renderPlayers();
+            // });
+            director.socket.on(Command.nextRound, (data) => {
+                this.playersData = data;
+                this.next();
+            });
+        }
     }
 
     init(useOldData = false) {
         this.cash = START_CASH;
         this.stockPosition = undefined;
         this.focusTrack = undefined;
+        this.enabled = true;
         this.updateScore();
         this.round = 0;
         for (let i = 0; i < this.tracks.length; i++) {
@@ -176,34 +191,67 @@ export class MainScene extends Scene {
             this.sideAxis.position.set(director.config.width / 2, 80);
 
         }
+        this.gameStart();
+    }
+
+    gameStart() {
         this.next();
+        if (MainScene.gameMode == GameMode.Auto)
+            this.autoPlay = setInterval(() => this.next(), 3000);
+        else if (MainScene.gameMode == GameMode.Multi)
+            setTimeout(() => { director.socket.send(Command.nextRound, { r: this.round, s: this.profit }) }, 3000);
     }
 
     next() {
         this.round++;
+        this.enabled = true;
         if (this.round == this.totalRound) {
-            this.gameOver();
+            clearInterval(this.autoPlay);
+            if (MainScene.gameMode != GameMode.Multi)
+                director.socket.send(Command.gameOver);
+            else
+                this.gameOver();
         } else {
+            if (MainScene.gameMode == GameMode.Multi)
+                setTimeout(() => { director.socket.send(Command.nextRound, { r: this.round, s: this.profit }) }, 3000);
             let max = 0, min = 0, hmax = 0, hmin = 0;
             for (let i = this.tracks.length - 1; i >= 0; i--) {
                 let track: CandleTrack = this.tracks[i];
                 track.nextData();
                 max = Math.max(max, track.historyMax);
                 min = Math.min(min, track.historyMin);
-                console.log(track.historyMin, track.historyMax)
+                // console.log(track.historyMin, track.historyMax)
                 hmax = Math.max(hmax, track.historyMax);
                 hmin = Math.min(hmin, track.historyMin);
             }
             console.log(hmin, hmax);
             this.axis.render(min, max);
             this.sideAxis.render(hmin, hmax);
-            this.axis.clearGraph();
-            this.sideAxis.clearGraph();
-            for (let i = 0; i < this.tracks.length; i++) {
-                this.tracks[i].renderCandle();
-                this.tracks[i].renderLine();
-            }
+            this.renderFrontAxis();
+            this.renderSideAxis();
+            this.renderPlayers();
             this.updateScore();
+        }
+    }
+
+    renderFrontAxis() {
+        this.axis.clearGraph();
+        for (let i = 0; i < this.tracks.length; i++) {
+            this.tracks[i].renderCandle();
+        }
+    }
+
+    renderSideAxis() {
+        this.sideAxis.clearGraph();
+        for (let i = 0; i < this.tracks.length; i++) {
+            this.tracks[i].renderLine();
+        }
+    }
+
+    renderPlayers() {
+        if (MainScene.gameMode == GameMode.Multi) {
+            this.axis.renderPlayers();
+            this.sideAxis.renderPlayers();
         }
     }
 
@@ -255,8 +303,7 @@ export class MainScene extends Scene {
         let playerRank;
         let sortedTracks = array.sortDesc(this.tracks, 'profit');
         for (let i = 0; i < sortedTracks.length; i++) {
-
-            console.log(sortedTracks[i].profit);
+            // console.log(sortedTracks[i].profit);
             let t: CandleTrack = sortedTracks[i]
             let name = t.stockName || '玩家';
             let d = '';
@@ -293,6 +340,10 @@ export class MainScene extends Scene {
         // }
     }
 
+    get profit(): number {
+        return this.tracks[0].profit;
+    }
+
     sell() {
         if (this.stockPosition != undefined) {
             this.cash = this.stockPosition.track.price * this.stockPosition.amount;
@@ -317,6 +368,14 @@ export class MainScene extends Scene {
         }
     }
 
+    onSelfClick(track) {
+        this.unfocus();
+        track.focus = true;
+        this.sell();
+        if (MainScene.gameMode == GameMode.Normal)
+            this.next();
+    }
+
     onTrackClick(track) {
         // this.unfocus();
         // if (this.focusTrack) {
@@ -335,10 +394,20 @@ export class MainScene extends Scene {
         //     this.focusTrack = track;
         //     this.buy(track);
         // }
+        if (!this.enabled) return;
+        this.enabled = false;
         this.unfocus();
         track.focus = true;
         this.sell();
         this.buy(track);
-        this.next();
+        this.renderFrontAxis();
+        if (MainScene.gameMode == GameMode.Normal)
+            this.next();
+    }
+
+    exit() {
+        // director.socket.off(Command.gameInfo);
+        director.socket.off(Command.gameOver);
+        director.socket.off(Command.nextRound);
     }
 }
