@@ -5,6 +5,7 @@ export class Command {
     public static readonly joinRoom: string = 'jr';
     public static readonly leaveRoom: string = 'lr';
     public static readonly getRoomInfo: string = 'ri';
+    public static readonly setRoomInfo: string = 'sr';
     public static readonly keepConnection: string = 'c';
     public static readonly startGame: string = 'sg';
     public static readonly restartGame: string = 'rg';

@@ -217,4 +217,9 @@ export class CandleTrack extends PIXI.Container {
         //     this.button.removeBorder();
         // this.star.visible = b;
     }
+
+    showButton(b: boolean) {
+        this.button.visible = b;
+    }
+
 }

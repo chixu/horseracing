@@ -14,7 +14,7 @@ export class MultiPlayerScene extends Scene {
 
     constructor() {
         super();
-        let l = new Label("房间列表", { fontSize: 50 });
+        let l = new Label("赛场列表", { fontSize: 50 });
         this.addChild(l);
         l.position.set(director.config.width / 2, 100);
 
@@ -70,14 +70,24 @@ export class MultiPlayerScene extends Scene {
         this.roomContainer.removeChildren();
         if (data) {
             for (let i = 0; i < data.length; i++) {
-                let b = new RectButton(350, 80, 0x00ff00);
-                b.text = `房间${i + 1}   (${data[i].u}/4)`;
-                b['id'] = data[i].id;
+                let d = data[i];
+                let b = new RectButton(420, 85, 0x00ff00);
+                // b.text = `房间${i + 1}   (${data[i].u}/4)`;
+                b['id'] = d.id;
                 b.clickHandler = () => {
                     director.socket.send(Command.joinRoom, b['id']);
                 }
+                let l1 = new Label(d.n + '的赛场', { align: 'left', fontSize: 40 });
+                b.addChild(l1);
+                let l2 = new Label(d.k + '条跑道  ' + d.t+'秒决策时间', { align: 'left', fontSize: 25 });
+                b.addChild(l2);
+                let l3 = new Label(d.u + "/" + d.m, { align: 'left', fontSize: 40 });
+                b.addChild(l3);
+                l1.position.set(-190, -37);
+                l2.position.set(-190, 7);
+                l3.position.set(115, -25);
                 this.roomContainer.addChild(b);
-                b.position.set(director.config.width / 2, 230 + i * 100);
+                b.position.set(director.config.width / 2, 200 + i * 110);
             }
         }
     }

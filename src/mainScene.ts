@@ -46,12 +46,14 @@ export class MainScene extends Scene {
     //inited: boolean = false;
     static renderHorse = true;
     autoPlay: number;
+    options;
 
-    constructor(num, mode = GameMode.Normal, round = 25) {
+    constructor(options) {
         super();
-        this.gameMode = mode;
-        this.numTracks = num;
-        this.totalRound = round;
+        this.options = options;
+        this.gameMode = options.mode || GameMode.Normal;
+        this.numTracks = options.n || 3;
+        this.totalRound = options.r || 25;
         this.scoreLabel = new Label('', { align: 'left', fontSize: 25 });
         this.scoreLabel.position.set(5, 5);
         this.addChild(this.scoreLabel);
@@ -128,7 +130,7 @@ export class MainScene extends Scene {
         //     c += this.stockPosition.track.price * this.stockPosition.amount;
         // }
         this.scoreLabel.value = '总市值: ' + this.totalAmount.toFixed(2);
-        this.titleLabel.value = this.round +'/' +this.totalRound;
+        this.titleLabel.value = this.round + '/' + this.totalRound;
     }
 
     // enter(args?) {

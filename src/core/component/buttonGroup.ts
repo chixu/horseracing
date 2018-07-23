@@ -34,12 +34,14 @@ export class ButtonGroup extends PIXI.Container {
             b['index'] = i;
             b.renderBorder(0x333333);
             b.clickHandler = () => {
-                this.selectedIndex = b['index'];
-                this.unselectAll();
-                b.render(opt.activateColor);
-                b.label.text.tint = 0xffffff;
-                if (this.selectHandler)
-                    this.selectHandler(b['index']);
+                if (this.selectedIndex != b['index']) {
+                    this.selectedIndex = b['index'];
+                    this.unselectAll();
+                    b.render(opt.activateColor);
+                    b.label.text.tint = 0xffffff;
+                    if (this.selectHandler)
+                        this.selectHandler(b['index']);
+                }
             }
             this.buttons.push(b);
             this.addChild(b);

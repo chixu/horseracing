@@ -23,7 +23,7 @@ export class SinglePlayerScene extends Scene {
             buttonWidth: 140,
             texts: ["手动播放", "自动播放"]
         });
-        bg.position.set(director.config.width/2, 750);
+        bg.position.set(director.config.width / 2, 750);
         this.addChild(bg);
         this.modeButton = bg;
     }
@@ -44,7 +44,7 @@ export class SinglePlayerScene extends Scene {
             rect.position.set(-60, -60);
         } else {
             b.clickHandler = () => {
-                director.sceneManager.replace(new MainScene(v + 1, this.modeButton.selectedIndex == 0 ? GameMode.Normal : GameMode.Auto));
+                director.sceneManager.replace(new MainScene({ n: v + 1, mode: this.modeButton.selectedIndex == 0 ? GameMode.Normal : GameMode.Auto }));
             }
 
         }

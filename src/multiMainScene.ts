@@ -23,9 +23,10 @@ export class MultiMainScene extends MainScene {
     replay;
     replay2;
 
-    constructor(num) {
+    constructor(data) {
         let d = director.socket.prevData
-        super(num, GameMode.Multi, d.t);
+        data.mode = GameMode.Multi;
+        super(data);
         this.playersData = d.u;
         this.owner = d.o == 1;
     }
@@ -50,7 +51,7 @@ export class MultiMainScene extends MainScene {
             this.gameOver(data);
         });
         director.socket.on(Command.restartGame, (data) => {
-            director.sceneManager.replace(new MultiMainScene(data.n));
+            director.sceneManager.replace(new MultiMainScene(data));
         });
         director.socket.on(Command.nextRound, (data) => {
             this.playersData = data;
@@ -65,7 +66,7 @@ export class MultiMainScene extends MainScene {
     setRoundTimeout() {
         setTimeout(() => {
             director.socket.send(Command.nextRound, { r: this.round, s: math.toFixedNumber(this.profit, 2) });
-        }, 3000);
+        }, this.options.t * 1000);
     }
 
     // gameStart() {
