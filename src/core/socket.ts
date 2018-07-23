@@ -7,6 +7,8 @@ export class Command {
     public static readonly getRoomInfo: string = 'ri';
     public static readonly keepConnection: string = 'c';
     public static readonly startGame: string = 'sg';
+    public static readonly restartGame: string = 'rg';
+    public static readonly leaveGame: string = 'lg';
     public static readonly gameInfo: string = 'gi';
     public static readonly gameOver: string = 'go';
     public static readonly nextRound: string = 'nr';
@@ -39,12 +41,29 @@ export class Socket {
         if (data != undefined)
             d.data = data;
         this.websocket.send(JSON.stringify(d));
+        this.tryConnect();
+    }
+
+    tryConnect() {
+        clearTimeout(this.keepConnection);
+        this.keepConnection = setTimeout(() => {
+            this.send('c');
+            this.tryConnect();
+        }, 5000);
+    }
+
+    close() {
+        clearTimeout(this.keepConnection);
+        this.websocket.close();
+        this.websocket = undefined;
     }
 
     init(url?) {
         let _resolve;
         if (this.websocket == undefined) {
-            url = url || "ws://192.168.0.121:8081";
+            // url = url || "ws://192.168.0.121:8081";
+            // url = url || "ws://192.168.31.44:8081";
+            url = url || "ws://203.195.171.55:8081";
             let websocket = new WebSocket(url);
             // websocket.setTimeout(0);
             console.log(websocket);
@@ -85,10 +104,8 @@ export class Socket {
                 console.log('Error ' + ev);
             };
             this.websocket = websocket;
+            this.tryConnect();
 
-            this.keepConnection = setInterval(() => {
-                this.send('c');
-            }, 5000);
             return new Promise((resolve) => _resolve = resolve);
         } else
             return Promise.resolve();

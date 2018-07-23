@@ -1,6 +1,7 @@
 
 import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/RectButton";
+import { ButtonGroup } from "./core/component/buttonGroup";
 import { Scene } from "./core/scene";
 import * as director from "./core/director";
 import { Command } from "./core/socket";
@@ -10,12 +11,13 @@ import { MultiMainScene } from "./multiMainScene";
 export class RoomScene extends Scene {
     playerContainer: PIXI.Container;
     title: Label;
+    trackButtons: ButtonGroup;
 
     constructor() {
         super();
         let l = new Label("房间", { fontSize: 50 });
         this.addChild(l);
-        l.position.set(director.config.width / 2, 150);
+        l.position.set(director.config.width / 2, 100);
         this.title = l;
 
         let b2 = new RectButton(220, 65, 0xff0000);
@@ -60,19 +62,30 @@ export class RoomScene extends Scene {
                 let b2 = new RectButton(220, 65, 0xff0000);
                 b2.text = "开始游戏";
                 b2.clickHandler = () => {
-                    director.socket.send(Command.startGame);
+                    director.socket.send(Command.startGame, this.trackButtons.selectedIndex + 1);
                 }
                 this.playerContainer.addChild(b2);
-                b2.position.set(director.config.width / 2, 700);
+                b2.position.set(director.config.width / 2, 710);
+            }
+            if (data.o) {
+                let bg = new ButtonGroup({
+                    buttonHeight: 70,
+                    buttonWidth: 70,
+                    texts: ["1", "2", "3", "4", "5", "6"],
+                    defaultIndex: 2
+                });
+                bg.position.set(director.config.width / 2, 620);
+                this.addChild(bg);
+                this.trackButtons = bg;
             }
             for (let i = 0; i < users.length; i++) {
-                let b = new RectButton(350, 80, 0x00ff00);
+                let b = new RectButton(300, 70, 0x00ff00);
                 b.text = users[i];
                 // b.clickHandler = () => {
                 //     // director.socket.send(Command.createRoom);
                 // }
                 this.playerContainer.addChild(b);
-                b.position.set(director.config.width / 2, 230 + i * 100);
+                b.position.set(director.config.width / 2, 200 + i * 90);
             }
         }
     }

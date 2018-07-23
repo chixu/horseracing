@@ -4,6 +4,7 @@ import * as director from "./core/director";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
 import { Label } from "./core/component/label";
+import { ButtonGroup } from "./core/component/buttonGroup";
 import { RectButton } from "./core/component/RectButton";
 import { MainScene } from "./mainScene";
 import { SinglePlayerScene } from "./singlePlayerScene";

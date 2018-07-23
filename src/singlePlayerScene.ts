@@ -3,11 +3,13 @@ import { Candle } from "./component/candle";
 import * as director from "./core/director";
 import * as graphic from "./utils/graphic";
 import { Label } from "./core/component/label";
-import { RectButton } from "./core/component/RectButton";
-import { MainScene } from "./mainScene";
+import { RectButton } from "./core/component/rectButton";
+import { ButtonGroup } from "./core/component/buttonGroup";
+import { MainScene, GameMode } from "./mainScene";
 
 export class SinglePlayerScene extends Scene {
     static readonly totalLevel = 6;
+    modeButton: ButtonGroup;
 
     constructor() {
         super();
@@ -16,6 +18,14 @@ export class SinglePlayerScene extends Scene {
         l.position.set(director.config.width / 2, 150);
         for (let i = 0; i < SinglePlayerScene.totalLevel; i++)
             this.createButton(i);
+        let bg = new ButtonGroup({
+            buttonHeight: 60,
+            buttonWidth: 140,
+            texts: ["手动播放", "自动播放"]
+        });
+        bg.position.set(director.config.width/2, 750);
+        this.addChild(bg);
+        this.modeButton = bg;
     }
 
     createButton(v: number) {
@@ -34,7 +44,7 @@ export class SinglePlayerScene extends Scene {
             rect.position.set(-60, -60);
         } else {
             b.clickHandler = () => {
-                director.sceneManager.replace(new MainScene(v + 1));
+                director.sceneManager.replace(new MainScene(v + 1, this.modeButton.selectedIndex == 0 ? GameMode.Normal : GameMode.Auto));
             }
 
         }

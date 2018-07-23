@@ -61,7 +61,7 @@ export class CandleTrack extends PIXI.Container {
         this.button.clickHandler = () => {
             this.mainScene.onTrackClick(this);
         }
-        this.button.text = '买';
+        this.button.text = '多';
         clickedArea.position.set(-buttonW * .5, -450);
         this.button.addChild(clickedArea);
         this.focus = false;

@@ -14,15 +14,20 @@ import { SelectionScene } from "./selectionScene";
 import { MainScene, GameMode } from "./mainScene";
 import * as math from "./utils/math";
 import * as array from "./utils/array";
+import { MultiPlayerScene } from "./multiPlayerScene";
 // import $ from "jquery";
 
 export class MultiMainScene extends MainScene {
     playersData: any;
+    owner: boolean;
+    replay;
+    replay2;
 
     constructor(num) {
-        MainScene.gameMode = GameMode.Multi;
-        super(num);
-        this.playersData = director.socket.prevData.u;
+        let d = director.socket.prevData
+        super(num, GameMode.Multi, d.t);
+        this.playersData = d.u;
+        this.owner = d.o == 1;
     }
 
     getData() {
@@ -44,9 +49,16 @@ export class MultiMainScene extends MainScene {
         director.socket.on(Command.gameOver, (data) => {
             this.gameOver(data);
         });
+        director.socket.on(Command.restartGame, (data) => {
+            director.sceneManager.replace(new MultiMainScene(data.n));
+        });
         director.socket.on(Command.nextRound, (data) => {
             this.playersData = data;
             this.next();
+        });
+        director.socket.on(Command.leaveGame, (data) => {
+            this.winPanel.removeChild(this.replay2);
+            this.winPanel.removeChild(this.replay);
         });
     }
 
@@ -71,6 +83,49 @@ export class MultiMainScene extends MainScene {
     renderPlayers() {
         this.axis.renderPlayers(this.playersData);
         this.sideAxis.renderPlayers(this.playersData);
+    }
+
+    renderGameOverUi() {
+        if (this.winPanel == undefined) {
+            this.winPanel = new PIXI.Container;
+        }
+        this.addChild(this.winPanel);
+        this.winPanel.removeChildren();
+        let rect = graphic.rectangle(director.config.width, director.config.height);
+        this.winPanel.addChild(rect);
+        rect.interactive = true;
+        rect.alpha = 0.7;
+
+        if (this.owner) {
+            let replay = new RectButton(180, 60, 0x00ff00);
+            replay.text = "重玩";
+            replay.position.set(director.config.width / 2, 670);
+            replay.clickHandler = () => {
+                director.socket.send(Command.restartGame, 1);
+            }
+            this.winPanel.addChild(replay);
+            let replay2 = new RectButton(180, 60, 0x00ff00);
+            replay2.text = "换股";
+            replay2.position.set(director.config.width / 2, 760);
+            replay2.clickHandler = () => {
+                director.socket.send(Command.restartGame, 0);
+            }
+            this.winPanel.addChild(replay2);
+            this.replay = replay;
+            this.replay2 = replay2;
+        }
+        let exit = new RectButton(180, 60, 0xff0000);
+        exit.text = "退出";
+        exit.clickHandler = () => {
+            director.socket.send(Command.leaveGame);
+            director.sceneManager.replace(new SelectionScene());
+        }
+        exit.position.set(director.config.width / 2, 850);
+        this.winPanel.addChild(exit);
+
+        let l1 = new Label("恭喜你", { fontSize: 50 });
+        this.winPanel.addChild(l1);
+        l1.position.set(director.config.width / 2, 50);
     }
 
     gameOver(data?) {
@@ -99,7 +154,7 @@ export class MultiMainScene extends MainScene {
         for (let i = 0; i < sortedTracks.length; i++) {
 
             let d = sortedTracks[i];
-            if(d.name == '你')
+            if (d.name == '你')
                 playerRank = i + 1;
             rank += (i + 1) + '. ' + d.name + '  ' + d.profit.toFixed(2) + '%\n';
         }
@@ -117,5 +172,7 @@ export class MultiMainScene extends MainScene {
         // director.socket.off(Command.gameInfo);
         director.socket.off(Command.gameOver);
         director.socket.off(Command.nextRound);
+        director.socket.off(Command.restartGame);
+        director.socket.off(Command.leaveGame);
     }
 }

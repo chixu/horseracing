@@ -46,8 +46,12 @@ export class MultiPlayerScene extends Scene {
 
         director.socket.on(Command.joinRoom, (data) => {
             console.log(data);
-            if (data)
-                director.sceneManager.replace(new RoomScene());
+            if (data) {
+                if (!data.e)
+                    director.sceneManager.replace(new RoomScene());
+                else
+                    console.log(data.e);
+            }
         })
         // this.renderRooms([
         //     {u:3},{u:1},{u:2},{u:3}

@@ -14,9 +14,9 @@ export class SelfTrack extends CandleTrack {
     constructor(mainScene: MainScene) {
         super(mainScene);
         // this.button.rect.tint = b ? 0x00ff00 : 0xff0000;
-        this.button.text = '空仓';
+        this.button.text = '空';
         this.button.clickHandler = () => {
-            this.mainScene.onSelfClick(this);
+            this.mainScene.onTrackClick(this);
         }
     }
 

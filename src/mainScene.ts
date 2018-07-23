@@ -30,28 +30,34 @@ export class MainScene extends Scene {
     trackGap: number;
     numTracks;
     scoreLabel: Label;
+    titleLabel: Label;
     cash: number;
     stockPosition: { track: CandleTrack, amount: number };
     closePrice = 10;
     // skipButton: RectButton;
     round: number;
-    readonly totalRound: number = 25;
+    totalRound: number;
     readonly numHistoryPoints: number = 30;
     axis: Axis;
     sideAxis: Axis;
     winPanel: PIXI.Container;
-    static gameMode: GameMode = GameMode.Auto;
+    gameMode: GameMode;
     enabled: boolean;
     //inited: boolean = false;
     static renderHorse = true;
     autoPlay: number;
 
-    constructor(num) {
+    constructor(num, mode = GameMode.Normal, round = 25) {
         super();
+        this.gameMode = mode;
         this.numTracks = num;
+        this.totalRound = round;
         this.scoreLabel = new Label('', { align: 'left', fontSize: 25 });
         this.scoreLabel.position.set(5, 5);
         this.addChild(this.scoreLabel);
+        this.titleLabel = new Label('', { align: 'left', fontSize: 25 });
+        this.titleLabel.position.set(300, 5);
+        this.addChild(this.titleLabel);
 
         let horseButton = new RectButton(120, 40, 0x0000ff);
         horseButton.text = MainScene.renderHorse ? "显示K线" : "显示赛马";
@@ -122,6 +128,7 @@ export class MainScene extends Scene {
         //     c += this.stockPosition.track.price * this.stockPosition.amount;
         // }
         this.scoreLabel.value = '总市值: ' + this.totalAmount.toFixed(2);
+        this.titleLabel.value = this.round +'/' +this.totalRound;
     }
 
     // enter(args?) {
@@ -174,8 +181,8 @@ export class MainScene extends Scene {
 
     gameStart() {
         this.next();
-        if (MainScene.gameMode == GameMode.Auto)
-            this.autoPlay = setInterval(() => this.next(), 3000);
+        if (this.gameMode == GameMode.Auto)
+            this.autoPlay = setInterval(() => this.next(), 1000);
     }
 
     renderNext() {
@@ -196,18 +203,16 @@ export class MainScene extends Scene {
         this.renderSideAxis();
         this.renderPlayers();
         this.updateScore();
-
     }
 
     next() {
         this.round++;
-        this.enabled = true;
+        this.renderNext();
         if (this.round == this.totalRound) {
             clearInterval(this.autoPlay);
             this.gameOver();
-        } else {
-            this.renderNext();
         }
+        this.enabled = true;
     }
 
     renderFrontAxis() {
@@ -345,40 +350,17 @@ export class MainScene extends Scene {
         }
     }
 
-    onSelfClick(track) {
-        this.unfocus();
-        track.focus = true;
-        this.sell();
-        if (MainScene.gameMode == GameMode.Normal)
-            this.next();
-    }
-
     onTrackClick(track) {
-        // this.unfocus();
-        // if (this.focusTrack) {
-        //     if (this.focusTrack == track) {
-        //         track.focus = false;
-        //         this.focusTrack = undefined;
-        //         this.sell();
-        //     } else {
-        //         this.focusTrack.focus = false;
-        //         track.focus = true;
-        //         this.focusTrack = track;
-        //         this.buy(track);
-        //     }
-        // } else {
-        //     track.focus = true;
-        //     this.focusTrack = track;
-        //     this.buy(track);
-        // }
         if (!this.enabled) return;
+        let self = track == this.tracks[0];
         this.enabled = false;
         this.unfocus();
         track.focus = true;
         this.sell();
-        this.buy(track);
+        if (!self)
+            this.buy(track);
         this.renderFrontAxis();
-        if (MainScene.gameMode == GameMode.Normal)
+        if (this.gameMode == GameMode.Normal)
             this.next();
     }
 }
