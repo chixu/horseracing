@@ -16,6 +16,7 @@ export class CandleTrack extends PIXI.Container {
     // star: PIXI.Sprite;
     //buttonText: Label;
     datas = [];
+    etcData;
     dataIndex: number;
     // static origDataIndex: number;
     min: number;
@@ -35,6 +36,7 @@ export class CandleTrack extends PIXI.Container {
     stockName: string;
     startDate: Date;
     endDate: Date;
+    infoPanel: PIXI.Container;
     // static dataDates: number[];
     // parsedData: any[];
 
@@ -46,13 +48,8 @@ export class CandleTrack extends PIXI.Container {
         this.numHistoryPoints = mainScene.numHistoryPoints;
         this.index = index;
         this.lineColor = this.btnColor = CandleTrack.colors[index];
-        this.candleContainer = new PIXI.Container;
+        this.candleContainer = new PIXI.Container();
         this.addChild(this.candleContainer);
-        // this.star = new PIXI.Sprite(director.resourceManager.texture('star'));
-        // this.addChild(this.star);
-        // this.star.pivot.set(this.star.width / 2, this.star.height / 2);
-        // this.star.scale.set(0.4, 0.4);
-        // this.star.y = -200;
         let buttonW = [120, 120, 120, 96, 80, 68][mainScene.numTracks - 1];
         let clickedArea = graphic.rectangle(buttonW, 420, 0xff0000);
         clickedArea.alpha = 0;
@@ -66,6 +63,10 @@ export class CandleTrack extends PIXI.Container {
         this.button.addChild(clickedArea);
         this.focus = false;
         this.addChild(this.button);
+
+        this.infoPanel = new PIXI.Container();
+        this.addChild(this.infoPanel);
+        // this.showButton(false);
     }
 
     get profit(): number {
@@ -81,8 +82,16 @@ export class CandleTrack extends PIXI.Container {
         this.focus = false;
     }
 
-    setDatas(d?: any[], name?: string) {
-        this.datas = d;
+    setDatas(d?: any, name?: string) {
+        this.datas = d.data;
+        this.etcData = d.etc;
+        let info;
+        if (this.mainScene.numTracks > 4)
+            info = new Label(`盈${this.etcData.pe}\n净${this.etcData.pb}\n增${this.etcData.inc}%\n`, { fontSize: 18, align: 'left' });
+        else
+            info = new Label(`市盈${this.etcData.pe}\n市净${this.etcData.pb}\n增长${this.etcData.inc}%\n`, { fontSize: 20, align: 'left' });
+        this.infoPanel.addChild(info);
+        info.position.set(-this.button.width / 2, 220);
         // let numPts = this.numHistoryPoints + this.mainScene.totalRound;
         // if (CandleTrack.origDataIndex == undefined)
         //     CandleTrack.origDataIndex = math.randomInteger(1, d.length - numPts);
@@ -220,6 +229,10 @@ export class CandleTrack extends PIXI.Container {
 
     showButton(b: boolean) {
         this.button.visible = b;
+    }
+
+    showInfo(b: boolean) {
+
     }
 
 }

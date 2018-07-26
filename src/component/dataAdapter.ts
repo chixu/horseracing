@@ -36,6 +36,7 @@ export class LocalDataAdapter extends DataAdapter {
         }
         let promise: Promise<any> = Promise.resolve();
         let datas = {};
+        let etcs = {}
         for (let i = 0; i < this.mainScene.numTracks; i++) {
             console.log(`/data/${stockids[i]}.json`);
             promise = promise.then(() => {
@@ -43,6 +44,11 @@ export class LocalDataAdapter extends DataAdapter {
                     let d = JSON.parse(data);
                     // datas.push(d.data.item);
                     datas[d.data.symbol] = d.data.item;
+                    etcs[d.data.symbol] = {
+                        pe: d.pe,
+                        pb: d.pb,
+                        inc: d.inc
+                    };
                 });
             });
         }
@@ -80,7 +86,11 @@ export class LocalDataAdapter extends DataAdapter {
                 for (let i = 0; i < this.dataDates.length; i++) {
                     newDatas.push(this.getDataByDate(d, this.dataDates[i]));
                 }
-                resData[k] = newDatas;
+                // resData[k] = newDatas;
+                resData[k] = {
+                    data: newDatas,
+                    etc: etcs[k]
+                };
             }
             return resData;
         });
