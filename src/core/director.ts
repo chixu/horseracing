@@ -3,6 +3,7 @@
 // import * as xml from "../utils/xml";
 // import { AppContext } from "./core/appContext";
 import { Device } from "./device";
+import { Request } from "../request";
 // import { Injector } from "./core/injector";
 // import { SingleEventEmitter } from "./core/singleEventEmitter";
 // import { InputManager } from "./core/inputManager";
@@ -33,8 +34,9 @@ export const serviceManager: ServiceManager = new ServiceManager();
 // export let elapsedMS: number = 0;
 // export const text: Text = new Text();
 export let user: User = new User();
+export let request: Request = new Request();
 export const device: Device = new Device();
-export let config;
+export let config: Options;
 export let renderer: PIXI.SystemRenderer;
 export let stage: PIXI.Container;
 export let app;
@@ -45,11 +47,14 @@ let rect;
 // export let config: any;
 
 export type Options = {
-    canvas: HTMLCanvasElement,
+    canvas?: any,
     width?: number,
     height?: number,
     backgroundColor?: number,
-    resolution?: number
+    resolution?: number,
+    domain?: string,
+    socketUrl?: string,
+    dataDomain?: string,
 }
 
 function createRenderer(options: Options) {
@@ -86,6 +91,15 @@ export function run() {
     config.height = 900;//xml.num(app, "height", 600);
     config.resolution = 2;//xml.num(app, "resolution", 1);
     config.backgroundColor = 0x0;//xml.num(app, "backgroundColor", 0x0);
+    // config.domain = 'http://192.168.0.101/horseriding/api/';
+    // config.socketUrl = "ws://192.168.0.101:8081";
+    // config.domain = 'http://192.168.31.44./horseriding/api/';
+    // config.socketUrl = "ws://192.168.31.44:8081";
+    // config.dataDomain = '/data/';
+    config.socketUrl = "ws://132.232.37.157:8081";
+    config.domain = 'http://192.168.0.136/game/';
+    config.dataDomain = 'data/';
+
     renderer = createRenderer(config);
 
     //   for (let i = 0; i < app.attributes.length; i++) {
@@ -143,6 +157,8 @@ export function run() {
     // start all services
     serviceManager.register('layout', new LayoutService());
     serviceManager.startup();
+
+    // request.send('test', { data: 'aaa' });
     // enter first scene
     //   sceneManager.replace(enterScene);
     PIXI.ticker.shared.add(update);

@@ -17,27 +17,27 @@ export class SceneManager {
         this.scenes = [];
     }
 
-    // push(scene: Scene, hide: boolean = true, args?: any) {
-    //     if (this.current) {
-    //         //   this.current.blur();
-    //         this.current.visible = !hide;
-    //     }
-    //     this.add(scene, args);
-    // }
+    push(scene: Scene, hide: boolean = true, args?: any) {
+        if (this.current) {
+            //   this.current.blur();
+            this.current.visible = !hide;
+        }
+        this.add(scene, args);
+    }
 
-    // pop() {
-    //     if (this.current) {
-    //         this.current.exit();
-    //         this.sceneContainer.removeChild(this.current);
-    //         this.scenes.pop();
-    //     }
-    //     if (this.scenes.length > 0) {
-    //         let scene = this.scenes[this.scenes.length - 1];
-    //         scene.visible = true;
-    //         scene.enter();
-    //         this.current = scene;
-    //     }
-    // }
+    pop() {
+        if (this.current) {
+            this.current.exit();
+            this.sceneContainer.removeChild(this.current);
+            this.scenes.pop();
+        }
+        if (this.scenes.length > 0) {
+            let scene = this.scenes[this.scenes.length - 1];
+            scene.visible = true;
+            scene.enter();
+            this.current = scene;
+        }
+    }
 
     replace(scene: Scene, args?: any) {
         if (this.current) {

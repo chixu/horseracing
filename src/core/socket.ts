@@ -1,3 +1,4 @@
+import * as director from './director';
 
 export class Command {
     public static readonly createRoom: string = 'cr';
@@ -8,6 +9,7 @@ export class Command {
     public static readonly setRoomInfo: string = 'sr';
     public static readonly keepConnection: string = 'c';
     public static readonly startGame: string = 'sg';
+    public static readonly gameReady: string = 'gr';
     public static readonly restartGame: string = 'rg';
     public static readonly leaveGame: string = 'lg';
     public static readonly gameInfo: string = 'gi';
@@ -59,12 +61,10 @@ export class Socket {
         this.websocket = undefined;
     }
 
-    init(url?) {
+    init() {
         let _resolve;
         if (this.websocket == undefined) {
-            // url = url || "ws://192.168.0.121:8081";
-            // url = url || "ws://192.168.31.44:8081";
-            url = url || "ws://203.195.171.55:8081";
+            let url = director.config.socketUrl;
             let websocket = new WebSocket(url);
             // websocket.setTimeout(0);
             console.log(websocket);

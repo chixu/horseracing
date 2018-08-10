@@ -22,6 +22,10 @@ export class MultiMainScene extends MainScene {
     owner: boolean;
     replay;
     replay2;
+    isReady;
+    countDownNumber;
+    countDownLabel: Label;
+    startButton;
 
     constructor(data) {
         let d = director.socket.prevData
@@ -29,6 +33,51 @@ export class MultiMainScene extends MainScene {
         super(data);
         this.playersData = d.u;
         this.owner = d.o == 1;
+        this.isReady = false;
+        this.countDownNumber = 3;
+        let startButton = new RectButton(200, 60, 0x00ff00);
+        startButton.text = "准备开始";
+        startButton.position.set(director.config.width / 2, 430);
+        startButton.clickHandler = () => {
+            startButton.text = "等待其他玩家";
+            director.socket.send(Command.gameReady);
+        };
+        this.addChild(startButton);
+        this.startButton = startButton;
+
+        let label = new Label('', { fontSize: 50 });
+        label.x = startButton.x;
+        label.y = startButton.y;
+        this.addChild(label);
+        label.visible = false;
+        this.countDownLabel = label;
+
+        for (let i = 1; i < this.tracks.length; i++) {
+            this.tracks[i].enabled = false;
+        }
+        // this.updateCountDown();
+    }
+
+    updateCountDown() {
+        this.countDownLabel.value = "游戏在" + this.countDownNumber + "秒后开始";
+    }
+
+    countDown() {
+        this.countDownLabel.visible = true;
+        this.startButton.visible = false;
+        this.updateCountDown();
+        setInterval(() => {
+            this.countDownNumber--;
+            if (this.countDownNumber == 0 && this.isReady) {
+                this.countDownLabel.visible = false;
+                for (let i = 1; i < this.tracks.length; i++) {
+                    this.tracks[i].enabled = true;
+                }
+                this.setRoundTimeout();
+            } else {
+                this.updateCountDown();
+            }
+        }, 1000);
     }
 
     getData() {
@@ -47,6 +96,10 @@ export class MultiMainScene extends MainScene {
     }
 
     enter(args?) {
+        director.socket.on(Command.gameReady, (data) => {
+            this.isReady = true;
+            this.countDown();
+        });
         director.socket.on(Command.gameOver, (data) => {
             this.gameOver(data);
         });
@@ -77,7 +130,8 @@ export class MultiMainScene extends MainScene {
     next() {
         this.round++;
         this.enabled = true;
-        this.setRoundTimeout();
+        if (this.isReady)
+            this.setRoundTimeout();
         this.renderNext();
     }
 

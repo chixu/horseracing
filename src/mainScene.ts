@@ -15,6 +15,7 @@ import * as math from "./utils/math";
 import * as array from "./utils/array";
 import { SelfTrack } from "./component/selfTrack";
 import { SinglePlayerScene } from "./singlePlayerScene";
+import { RecordScene } from "./recordScene";
 // import $ from "jquery";
 export const START_CASH = 100000;
 
@@ -46,13 +47,16 @@ export class MainScene extends Scene {
     //inited: boolean = false;
     static renderHorse = true;
     autoPlay: number;
+    history: number[];
     options;
 
     constructor(options) {
         super();
+
         this.options = options;
-        this.gameMode = options.mode || GameMode.Normal;
+        this.gameMode = options.mode == undefined ? GameMode.Normal : options.mode;
         this.numTracks = options.n || 3;
+        // this.numTracks = 4;
         this.totalRound = options.r || 25;
         this.scoreLabel = new Label('', { align: 'left', fontSize: 25 });
         this.scoreLabel.position.set(5, 5);
@@ -61,9 +65,9 @@ export class MainScene extends Scene {
         this.titleLabel.position.set(300, 5);
         this.addChild(this.titleLabel);
 
-        let horseButton = new RectButton(120, 40, 0x0000ff);
+        let horseButton = new RectButton(100, 40, 0x0000ff);
         horseButton.text = MainScene.renderHorse ? "显示K线" : "显示赛马";
-        horseButton.position.set(director.config.width - 60, 20)
+        horseButton.position.set(director.config.width - 50, 20)
         horseButton.clickHandler = () => {
             console.log(horseButton.text);
             if (horseButton.text == "显示赛马") {
@@ -80,13 +84,40 @@ export class MainScene extends Scene {
         }
         this.addChild(horseButton);
 
-        // this.skipButton = new RectButton(120, 60, 0x0000ff);
-        // this.skipButton.position.set(300, 800);
-        // this.skipButton.clickHandler = () => {
-        //     this.next();
+        let showButton = new RectButton(100, 40, 0x0000ff);
+        showButton.text = "显示按钮";
+        showButton.position.set(director.config.width - 155, 20)
+        showButton.clickHandler = () => {
+            console.log(showButton.text);
+            if (showButton.text == "显示按钮") {
+                showButton.text = "隐藏按钮";
+                for (let i = 0; i < this.tracks.length; i++)
+                    this.tracks[i].showButton();
+            } else {
+                showButton.text = "显示按钮";
+                for (let i = 0; i < this.tracks.length; i++)
+                    this.tracks[i].showButton(false);
+            }
+        }
+        this.addChild(showButton);
+        // let infoButton = new RectButton(100, 40, 0x00ff00);
+        // infoButton.text = MainScene.renderHorse ? "显示数据" : "隐藏数据";
+        // infoButton.position.set(director.config.width - 150, 20)
+        // infoButton.clickHandler = () => {
+        //     console.log(infoButton.text);
+        //     if (infoButton.text == "显示赛马") {
+        //         infoButton.text = "显示K线";
+        //         MainScene.renderHorse = true;
+        //     } else {
+        //         infoButton.text = "显示赛马";
+        //         MainScene.renderHorse = false;
+        //     }
+        //     this.axis.clearGraph();
+        //     for (let i = 0; i < this.tracks.length; i++) {
+        //         this.tracks[i].renderCandle();
+        //     }
         // }
-        // this.skipButton.text = '观望';
-        // this.addChild(this.skipButton);
+        // this.addChild(infoButton);
         this.tracksWidth = 310 + 22 * this.numTracks;
         this.tracks = [];
         this.trackGap = 0;
@@ -143,6 +174,7 @@ export class MainScene extends Scene {
         this.enabled = true;
         this.updateScore();
         this.round = 0;
+        this.history = [];
         for (let i = 0; i < this.tracks.length; i++) {
             this.tracks[i].clearData();
         }
@@ -246,14 +278,16 @@ export class MainScene extends Scene {
         rect.alpha = 0.7;
 
 
-        let replay = new RectButton(180, 60, 0x00ff00);
-        replay.text = "重玩";
-        replay.position.set(director.config.width / 2, 670);
-        replay.clickHandler = () => {
-            this.removeChild(this.winPanel);
-            this.init(true);
+        let rank = new RectButton(180, 60, 0x00ff00);
+        rank.text = "龙虎榜";
+        rank.position.set(director.config.width / 2, 670);
+        rank.clickHandler = () => {
+            if (director.user.isLogin)
+                director.sceneManager.push(new RecordScene());
+            else
+                director.user.showLogin();
         }
-        this.winPanel.addChild(replay);
+        this.winPanel.addChild(rank);
         let replay2 = new RectButton(180, 60, 0x00ff00);
         replay2.text = "换股";
         replay2.position.set(director.config.width / 2, 760);
@@ -277,7 +311,28 @@ export class MainScene extends Scene {
 
     gameOver(data?) {
         this.renderGameOverUi();
-        console.log('single');
+        //uploadScore
+        if (director.user.isLogin) {
+            let t: CandleTrack = this.tracks[1];
+            let tracks = [];
+            for (let i = 1; i < this.numTracks + 1; i++)
+                tracks.push(this.tracks[i].stockName);
+            data = {
+                numTrack: this.numTracks,
+                startDate: date.dateToYYmmdd(t.startDate),
+                endDate: date.dateToYYmmdd(t.endDate),
+                tracks: tracks,
+                history: this.history,
+                round: this.totalRound
+            };
+            console.log(data);
+            director.request.send('upload_score', {
+                name: director.user.name,
+                level: this.numTracks,
+                value: this.profit,
+                data: data
+            })
+        }
         // let percent = this.totalAmount / START_CASH - 1;
         // console.log('percent', percent);
         //let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n击败了${(1 / (1 + Math.pow(2, -30 * percent)) * 100).toFixed(2)}%的玩家`, { fontSize: 40 });
@@ -303,18 +358,30 @@ export class MainScene extends Scene {
         this.winPanel.addChild(l3);
         l3.position.set(director.config.width / 2, 410);
 
-        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n排名第${playerRank}`, { fontSize: 40 });
+        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n赛场排名第${playerRank}`, { fontSize: 40 });
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
 
+        director.request.send('break_record', {
+            level: this.numTracks,
+            value: this.profit
+        }).then(res => {
+            if (!res.err && res.data) {
+                let l4 = new Label(`你的收益超过了其他理财师，快去龙虎榜看一看！`, { fontSize: 27, fill: 0xffd700 });
+                this.winPanel.addChild(l4);
+                l4.position.set(director.config.width / 2, 270);
+            }
+        })
+
         if (playerRank == 1) {
-            director.user.unlockedLevel++;
+            if (director.user.unlockedLevel == this.numTracks)
+                director.user.unlockedLevel++;
             if (director.user.unlockedLevel <= SinglePlayerScene.totalLevel) {
                 let next = new RectButton(180, 60, 0x00ff00);
                 next.text = "下一关";
                 next.position.set(director.config.width / 2, 580);
                 next.clickHandler = () => {
-                    director.sceneManager.replace(new MainScene(director.user.unlockedLevel));
+                    director.sceneManager.replace(new MainScene({ n: director.user.unlockedLevel, mode: this.gameMode }));
                 }
                 this.winPanel.addChild(next);
             }
@@ -336,6 +403,7 @@ export class MainScene extends Scene {
     }
 
     buy(track: CandleTrack) {
+        if (track == this.tracks[0]) return;
         this.sell();
         if (this.stockPosition == undefined) {
             this.stockPosition = {
@@ -354,14 +422,13 @@ export class MainScene extends Scene {
 
     onTrackClick(track) {
         if (!this.enabled) return;
-        let self = track == this.tracks[0];
         this.enabled = false;
         this.unfocus();
         track.focus = true;
         this.sell();
-        if (!self)
-            this.buy(track);
+        this.buy(track);
         this.renderFrontAxis();
+        this.history.push(track.index);
         if (this.gameMode == GameMode.Normal)
             this.next();
     }

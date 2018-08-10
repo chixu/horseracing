@@ -6,6 +6,7 @@ import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/rectButton";
 import { ButtonGroup } from "./core/component/buttonGroup";
 import { MainScene, GameMode } from "./mainScene";
+import { SelectionScene } from "./selectionScene";
 
 export class SinglePlayerScene extends Scene {
     static readonly totalLevel = 6;
@@ -26,6 +27,14 @@ export class SinglePlayerScene extends Scene {
         bg.position.set(director.config.width / 2, 750);
         this.addChild(bg);
         this.modeButton = bg;
+
+        let b2 = new RectButton(220, 65, 0xff0000);
+        b2.text = "退出";
+        b2.clickHandler = () => {
+            director.sceneManager.replace(new SelectionScene());
+        }
+        this.addChild(b2);
+        b2.position.set(director.config.width / 2, 820);
     }
 
     createButton(v: number) {

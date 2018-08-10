@@ -33,8 +33,8 @@ export class ButtonGroup extends PIXI.Container {
             b.x = i * (opt.buttonWidth + opt.gap) + (opt.buttonWidth - width) / 2;
             b['index'] = i;
             b.renderBorder(0x333333);
-            b.clickHandler = () => {
-                if (this.selectedIndex != b['index']) {
+            b.clickHandler = force => {
+                if (this.selectedIndex != b['index'] || force) {
                     this.selectedIndex = b['index'];
                     this.unselectAll();
                     b.render(opt.activateColor);
@@ -56,8 +56,8 @@ export class ButtonGroup extends PIXI.Container {
         }
     }
 
-    select(idx) {
-        this.buttons[idx].clickHandler();
+    select(idx, force?) {
+        this.buttons[idx].clickHandler(force);
     }
 
     get selectedText() {

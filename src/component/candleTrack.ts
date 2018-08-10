@@ -39,6 +39,8 @@ export class CandleTrack extends PIXI.Container {
     infoPanel: PIXI.Container;
     // static dataDates: number[];
     // parsedData: any[];
+    clickedArea;
+    _enabled: boolean;
 
     constructor(mainScene: MainScene, index: number = 0) {
         super();
@@ -51,16 +53,19 @@ export class CandleTrack extends PIXI.Container {
         this.candleContainer = new PIXI.Container();
         this.addChild(this.candleContainer);
         let buttonW = [120, 120, 120, 96, 80, 68][mainScene.numTracks - 1];
-        let clickedArea = graphic.rectangle(buttonW, 420, 0xff0000);
+        // let clickedArea = graphic.rectangle(buttonW, 420, 0xff0000);
+        let clickedArea = new RectButton(buttonW, 420, 0xff0000);
         clickedArea.alpha = 0;
         this.button = new RectButton(buttonW, 60, CandleTrack.colors[index]);
         this.button.y = 300;
-        this.button.clickHandler = () => {
+        clickedArea.y = 60;
+        this.button.clickHandler = clickedArea.clickHandler = () => {
             this.mainScene.onTrackClick(this);
         }
         this.button.text = '多';
-        clickedArea.position.set(-buttonW * .5, -450);
-        this.button.addChild(clickedArea);
+        this.button.visible = false;
+        this.clickedArea = clickedArea;
+        this.addChild(clickedArea);
         this.focus = false;
         this.addChild(this.button);
 
@@ -80,6 +85,7 @@ export class CandleTrack extends PIXI.Container {
         this.close = undefined;
         this.dataIndex = this.numHistoryPoints - 1;
         this.focus = false;
+        this.infoPanel.removeChildren();
     }
 
     setDatas(d?: any, name?: string) {
@@ -227,9 +233,16 @@ export class CandleTrack extends PIXI.Container {
         // this.star.visible = b;
     }
 
-    showButton(b: boolean) {
-        this.button.visible = b;
+    set enabled(b: boolean) {
+        this._enabled = b;
+        this.clickedArea.visible = b;
     }
+
+    showButton(b: boolean = true) {
+        this.button.visible = b;
+        this.infoPanel.visible = !b;
+    }
+
 
     showInfo(b: boolean) {
 

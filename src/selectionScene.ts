@@ -4,11 +4,13 @@ import * as director from "./core/director";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
 import { Label } from "./core/component/label";
+// import * as login from "./user";
 import { ButtonGroup } from "./core/component/buttonGroup";
 import { RectButton } from "./core/component/RectButton";
 import { MainScene } from "./mainScene";
 import { SinglePlayerScene } from "./singlePlayerScene";
 import { MultiPlayerScene } from "./multiPlayerScene";
+import { RecordScene } from "./recordScene";
 
 export class SelectionScene extends Scene {
 
@@ -34,6 +36,24 @@ export class SelectionScene extends Scene {
             );
         }
         this.addChild(b2);
-        b2.position.set(director.config.width / 2, 450);
+        b2.position.set(director.config.width / 2, b.y + 150);
+        console.log(director.user.isLogin);
+        if (!director.user.isLogin) {
+            let b3 = new RectButton(220, 65, 0xff0000);
+            b3.text = "登 录";
+            b3.clickHandler = () => {
+                director.user.showLogin(()=>director.sceneManager.replace(new SelectionScene()));
+            }
+            this.addChild(b3);
+            b3.position.set(director.config.width / 2, b2.y + 150);
+        } else {
+            let b3 = new RectButton(220, 65, 0xff0000);
+            b3.text = "龙虎榜";
+            b3.clickHandler = () => {
+                director.sceneManager.push(new RecordScene());
+            }
+            this.addChild(b3);
+            b3.position.set(director.config.width / 2, b2.y + 150);
+        }
     }
 }

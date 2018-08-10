@@ -2,6 +2,7 @@ import { MainScene } from "../mainScene";
 import * as math from "../utils/math";
 import * as array from "../utils/array";
 import * as http from "../utils/http";
+import * as director from "../core/director";
 import { CandleTrack } from "./candleTrack";
 
 export class DataAdapter {
@@ -40,7 +41,7 @@ export class LocalDataAdapter extends DataAdapter {
         for (let i = 0; i < this.mainScene.numTracks; i++) {
             console.log(`/data/${stockids[i]}.json`);
             promise = promise.then(() => {
-                return http.get(`/data/${stockids[i]}.json`).then(data => {
+                return http.get(director.config.dataDomain + `${stockids[i]}.json`).then(data => {
                     let d = JSON.parse(data);
                     // datas.push(d.data.item);
                     datas[d.data.symbol] = d.data.item;
