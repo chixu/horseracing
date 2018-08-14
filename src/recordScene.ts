@@ -45,7 +45,7 @@ export class RecordScene extends Scene {
     }
 
     getRankings(level) {
-        director.request.send('get_score', { level: level }).then(res => {
+        director.request.get('get_score', { level: level }).then(res => {
             if (res.err) {
                 console.log(res.err);
             } else
@@ -70,8 +70,9 @@ export class RecordScene extends Scene {
             this.recordContainer.addChild(h1);
             this.recordContainer.addChild(h2);
             this.recordContainer.addChild(h3);
-            for (let i = 0; i < data.length; i++) {
-                let d = data[i];
+            let i = 0;
+            for (let k in data) {
+                let d = data[k];
                 let l1 = new Label((i + 1).toString(), { fontSize: 30 });
                 let l2 = new Label(d.user, { fontSize: 30 });
                 let l3 = new Label((parseFloat(d.value)).toFixed(2) + "%", { fontSize: 30 });
@@ -81,6 +82,7 @@ export class RecordScene extends Scene {
                 this.recordContainer.addChild(l1);
                 this.recordContainer.addChild(l2);
                 this.recordContainer.addChild(l3);
+                i++;
             }
         }
     }

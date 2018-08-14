@@ -32,20 +32,20 @@ export class Request {
     // private get domain()
 
     private getUrl(api, data?) {
-        let url = director.config.domain + api;
+        let url = director.config.apiDomain + api + (director.config.env == 'dev' ? ".php" : "");
         if (data) {
             // url += '?d=';
             let str = "";
             for (let k in data) {
-                str += k + '=' + data[k] + '&';
+                str += k + '=' + encodeURIComponent(data[k]) + '&';
             }
             // return url + '?d=' + encodeURIComponent(encrypt(str.substr(0, url.length - 1)));
-            return url + '?'+ str.substr(0, url.length - 1);
+            return url + '?' + str.substr(0, str.length - 1);
         } else
             return url;
     }
 
-    send(api, data) {
+    get(api, data) {
         return http.get(this.getUrl(api, data))
             .then((res) => {
                 let r;
@@ -61,4 +61,19 @@ export class Request {
             });
     }
 
+    post(api, data) {
+        return http.post(this.getUrl(api), data)
+            .then((res) => {
+                let r;
+                console.log(res);
+                try {
+                    r = JSON.parse(res);
+                } catch{
+                    r = {
+                        err: res
+                    }
+                }
+                return r;
+            });
+    }
 }

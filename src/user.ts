@@ -15,13 +15,12 @@ export class User {
     loginHandler;
 
     constructor() {
-        this.loadCookie();
         loginButton.onclick = () => {
             let u = username.value.trim();
             let p = password.value.trim();
             if (u && p) {
                 // http.post('http://192.168.0.136/game_login/login', {
-                http.post(director.config.domain + 'login', {
+                http.post(director.config.apiDomain + 'login', {
                     user_name: u,
                     user_pwd: md5(p)
                 }).then((res) => {
@@ -29,7 +28,7 @@ export class User {
                         alert("账号或密码错误");
                     } else {
                         let obj = JSON.parse(res);
-                        this.setCookie('username', obj.username);
+                        http.setCookie('username', obj.username);
                         this.name = obj.username;
                         this.hideLogin();
                         if (this.loginHandler)
@@ -47,10 +46,15 @@ export class User {
 
     showLogin(cb?) {
         console.log('show mask');
-        document.body.style.background = 'white';
-        director.sceneManager.current.addMask(0xffffff);
-        logpinPanel.style.display = 'block';
-        this.loginHandler = cb;
+        if (director.config.platform == 'web') {
+            // window.top.location.href = window.location.origin + "/login";
+            alert("请先登录海知平台");
+        } else {
+            document.body.style.background = 'white';
+            director.sceneManager.current.addMask(0xffffff);
+            logpinPanel.style.display = 'block';
+            this.loginHandler = cb;
+        }
     }
 
     hideLogin() {
@@ -60,45 +64,39 @@ export class User {
     }
 
     get isLogin(): boolean {
-        console.log(this.name);
-        return this.name != "";
+        // console.log(this.name);
+        return this.name != undefined && this.name != "";
     }
 
-    private loadCookie() {
-        this.name = this.getCookie('username');
-        if (localStorage.unlockedLevel == "undefined" || localStorage.unlockedLevel == undefined)
-            localStorage.unlockedLevel = 1;
-        this._unlockedLevel = parseInt(localStorage.unlockedLevel);
+    public load(): Promise<any> {
+        if (director.config.platform == 'web')
+            this.name = http.getQueryString('username');
+        else
+            this.name = http.getCookie('username');
+
+        if (this.name) {
+            return director.request.get('get_user_info', { user: this.name }).then(d => {
+                console.log(d);
+                this._unlockedLevel = parseInt(d.data.level);
+            });
+        } else {
+            if (localStorage.unlockedLevel == "undefined" || localStorage.unlockedLevel == undefined)
+                localStorage.unlockedLevel = 1;
+            this._unlockedLevel = parseInt(localStorage.unlockedLevel);
+            return Promise.resolve();
+        }
     }
 
     set unlockedLevel(v) {
         localStorage.unlockedLevel = this._unlockedLevel = v;
+        if (this.name) {
+            director.request.get('update_user_info', { user: this.name, level: v });
+        }
     }
 
     get unlockedLevel(): number {
+        console.log(this._unlockedLevel);
         return this._unlockedLevel;
     }
 
-    private setCookie(cname, cvalue, exdays = 7) {
-        var d = new Date();
-        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-        var expires = "expires=" + d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-    }
-
-    private getCookie(cname) {
-        var name = cname + "=";
-        var decodedCookie = decodeURIComponent(document.cookie);
-        var ca = decodedCookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-            }
-        }
-        return "";
-    }
 }

@@ -2,13 +2,14 @@
 // import { Orientation } from "./core/types";
 // import * as xml from "../utils/xml";
 // import { AppContext } from "./core/appContext";
-import { Device } from "./device";
+import { Device, Platform } from "./device";
 import { Request } from "../request";
 // import { Injector } from "./core/injector";
 // import { SingleEventEmitter } from "./core/singleEventEmitter";
 // import { InputManager } from "./core/inputManager";
 import { ResourceManager } from "./resourceManager";
 import { Resource } from "./resource";
+import * as http from "../utils/http";
 import { SpriteSheetResource } from "./spriteSheetResource";
 // import { Candle } from "../component/candle";
 import { Socket } from "./socket";
@@ -33,8 +34,8 @@ export const serviceManager: ServiceManager = new ServiceManager();
 // export const juggler: Juggler = new Juggler();
 // export let elapsedMS: number = 0;
 // export const text: Text = new Text();
-export let user: User = new User();
 export let request: Request = new Request();
+export let user: User;
 export const device: Device = new Device();
 export let config: Options;
 export let renderer: PIXI.SystemRenderer;
@@ -53,8 +54,11 @@ export type Options = {
     backgroundColor?: number,
     resolution?: number,
     domain?: string,
+    apiDomain?: string,
     socketUrl?: string,
     dataDomain?: string,
+    env?: string,
+    platform?: string,
 }
 
 function createRenderer(options: Options) {
@@ -86,22 +90,28 @@ export function run() {
     config = {};
     //   appContext.ID = xml.id(app);
     //   let enterScene = xml.str(app, "enter");
+
+    config.domain = window.location.hostname;
     config.canvas = document.getElementById("stage");
     config.width = 600;//xml.num(app, "width", 800);
     config.height = 900;//xml.num(app, "height", 600);
     config.resolution = 2;//xml.num(app, "resolution", 1);
     config.backgroundColor = 0x0;//xml.num(app, "backgroundColor", 0x0);
-    // config.domain = 'http://192.168.0.101/horseriding/api/';
+    config.env = http.getQueryString('env');
+    config.platform = http.getQueryString('platform') || 'mobile';
     // config.socketUrl = "ws://192.168.0.101:8081";
     // config.domain = 'http://192.168.31.44./horseriding/api/';
     // config.socketUrl = "ws://192.168.31.44:8081";
     // config.dataDomain = '/data/';
     config.socketUrl = "ws://132.232.37.157:8081";
-    config.domain = 'http://192.168.0.136/game/';
+    if (config.env == 'dev')
+        config.apiDomain = window.location.origin + `/horseriding/api/`;
+    else
+        config.apiDomain = window.location.origin + `/game/`;
     config.dataDomain = 'data/';
 
     renderer = createRenderer(config);
-
+    user = new User();
     //   for (let i = 0; i < app.attributes.length; i++) {
     //     let propName = app.attributes[i].name;
     //     if (appContext[propName] === undefined)
@@ -141,7 +151,7 @@ export function run() {
         // let texture = resourceManager.texture('cat');
         // let image = new PIXI.Sprite(texture);
         // stage.addChild(image);
-        sceneManager.replace(new SelectionScene());
+        user.load().then(() => sceneManager.replace(new SelectionScene()));
     });
 
     // configure scenes

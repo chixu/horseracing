@@ -47,8 +47,9 @@ export class MainScene extends Scene {
     //inited: boolean = false;
     static renderHorse = true;
     autoPlay: number;
-    history: number[];
+    history: { i: number, time: any }[];
     options;
+    startTime;
 
     constructor(options) {
         super();
@@ -215,6 +216,7 @@ export class MainScene extends Scene {
 
     gameStart() {
         this.next();
+        this.startTime = new Date();
         if (this.gameMode == GameMode.Auto)
             this.autoPlay = setInterval(() => this.next(), 1000);
     }
@@ -312,27 +314,6 @@ export class MainScene extends Scene {
     gameOver(data?) {
         this.renderGameOverUi();
         //uploadScore
-        if (director.user.isLogin) {
-            let t: CandleTrack = this.tracks[1];
-            let tracks = [];
-            for (let i = 1; i < this.numTracks + 1; i++)
-                tracks.push(this.tracks[i].stockName);
-            data = {
-                numTrack: this.numTracks,
-                startDate: date.dateToYYmmdd(t.startDate),
-                endDate: date.dateToYYmmdd(t.endDate),
-                tracks: tracks,
-                history: this.history,
-                round: this.totalRound
-            };
-            console.log(data);
-            director.request.send('upload_score', {
-                name: director.user.name,
-                level: this.numTracks,
-                value: this.profit,
-                data: data
-            })
-        }
         // let percent = this.totalAmount / START_CASH - 1;
         // console.log('percent', percent);
         //let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n击败了${(1 / (1 + Math.pow(2, -30 * percent)) * 100).toFixed(2)}%的玩家`, { fontSize: 40 });
@@ -362,9 +343,38 @@ export class MainScene extends Scene {
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
 
-        director.request.send('break_record', {
+
+
+        if (director.user.isLogin) {
+            let t: CandleTrack = this.tracks[1];
+            let tracks = [];
+            for (let i = 1; i < this.numTracks + 1; i++)
+                tracks.push(this.tracks[i].stockName);
+            data = {
+                numTrack: this.numTracks,
+                startDate: date.dateToYYmmdd(t.startDate),
+                endDate: date.dateToYYmmdd(t.endDate),
+                tracks: tracks,
+                history: this.history,
+                round: this.totalRound,
+                auto: this.gameMode == GameMode.Auto,
+                profit: this.profit,
+                rank: playerRank,
+            };
+            console.log(data);
+            director.request.post('upload_score', {
+                user: director.user.name,
+                level: this.numTracks,
+                value: this.profit,
+                data:  JSON.stringify(data),
+                rank: playerRank
+            })
+        }
+
+        director.request.get('break_record', {
             level: this.numTracks,
-            value: this.profit
+            value: this.profit,
+            user: director.user.name
         }).then(res => {
             if (!res.err && res.data) {
                 let l4 = new Label(`你的收益超过了其他理财师，快去龙虎榜看一看！`, { fontSize: 27, fill: 0xffd700 });
@@ -428,7 +438,11 @@ export class MainScene extends Scene {
         this.sell();
         this.buy(track);
         this.renderFrontAxis();
-        this.history.push(track.index);
+        let time: any = new Date();
+        this.history.push({
+            i: track.index,
+            time: time - this.startTime
+        });
         if (this.gameMode == GameMode.Normal)
             this.next();
     }
