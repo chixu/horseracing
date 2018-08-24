@@ -5,6 +5,7 @@ import { Command } from "./core/socket";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
 import { LocalDataAdapter } from "./component/dataAdapter";
+import * as lStorage from "./component/localStorage";
 import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/RectButton";
 import * as http from "./utils/http";
@@ -287,7 +288,7 @@ export class MainScene extends Scene {
             if (director.user.isLogin)
                 director.sceneManager.push(new RecordScene());
             else
-                director.user.showLogin();
+                director.user.showLogin(()=>director.sceneManager.push(new RecordScene()));
         }
         this.winPanel.addChild(rank);
         let replay2 = new RectButton(180, 60, 0x00ff00);
@@ -343,32 +344,33 @@ export class MainScene extends Scene {
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
 
-
-
+        //upload score
+        let t: CandleTrack = this.tracks[1];
+        let tracks = [];
+        for (let i = 1; i < this.numTracks + 1; i++)
+            tracks.push(this.tracks[i].stockName);
+        let resData = {
+            numTrack: this.numTracks,
+            startDate: date.dateToYYmmdd(t.startDate),
+            endDate: date.dateToYYmmdd(t.endDate),
+            tracks: tracks,
+            history: this.history,
+            round: this.totalRound,
+            auto: this.gameMode == GameMode.Auto,
+            profit: this.profit,
+            rank: playerRank,
+        };
+        let postData = {
+            user: director.user.isLogin ? director.user.name : "",
+            level: this.numTracks,
+            value: this.profit,
+            data: JSON.stringify(resData),
+            rank: playerRank
+        }
         if (director.user.isLogin) {
-            let t: CandleTrack = this.tracks[1];
-            let tracks = [];
-            for (let i = 1; i < this.numTracks + 1; i++)
-                tracks.push(this.tracks[i].stockName);
-            data = {
-                numTrack: this.numTracks,
-                startDate: date.dateToYYmmdd(t.startDate),
-                endDate: date.dateToYYmmdd(t.endDate),
-                tracks: tracks,
-                history: this.history,
-                round: this.totalRound,
-                auto: this.gameMode == GameMode.Auto,
-                profit: this.profit,
-                rank: playerRank,
-            };
-            console.log(data);
-            director.request.post('upload_score', {
-                user: director.user.name,
-                level: this.numTracks,
-                value: this.profit,
-                data:  JSON.stringify(data),
-                rank: playerRank
-            })
+            director.request.post('upload_score', postData);
+        } else {
+            lStorage.setRecord(postData);
         }
 
         director.request.get('break_record', {

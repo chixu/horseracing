@@ -59,6 +59,7 @@ export type Options = {
     dataDomain?: string,
     env?: string,
     platform?: string,
+    game?: any
 }
 
 function createRenderer(options: Options) {
@@ -90,7 +91,7 @@ export function run() {
     config = {};
     //   appContext.ID = xml.id(app);
     //   let enterScene = xml.str(app, "enter");
-
+    config.game = { totalLevel: 6 }
     config.domain = window.location.hostname;
     config.canvas = document.getElementById("stage");
     config.width = 600;//xml.num(app, "width", 800);

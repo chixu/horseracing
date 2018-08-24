@@ -14,10 +14,17 @@
 
 <body>
     <div style="background-image: url(" images/bg.jpg ");">
-        <iframe src="index.html?platform=web" style="display: block; width: 600px; height: 900px; margin: auto;" frameborder="0">
+        <iframe style="display: block; width: 600px; height: 900px; margin: auto;" frameborder="0">
         </iframe>
     </div>
     <script>
+        var iframe = document.getElementsByTagName('iframe')[0];
+        iframe.src = "index.html?platform=web&env=dev&username=test123" + (document.referrer.indexOf('login')>-1?'&login=1':'');
+        console.log('zzzz', document.referrer);   
+        function redirect() {
+            window.location.href = window.location.origin + "/login.html";
+        }
+
         function resize() {
             let height = Math.min(900, Math.max(600, window.innerHeight));
             let width = Math.round(height / 3 * 2);

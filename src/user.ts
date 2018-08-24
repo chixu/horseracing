@@ -1,5 +1,6 @@
 import * as http from "./utils/http";
 import * as director from "./core/director";
+import * as lStorage from "./component/localStorage";
 declare var md5;
 
 
@@ -28,11 +29,13 @@ export class User {
                         alert("账号或密码错误");
                     } else {
                         let obj = JSON.parse(res);
-                        http.setCookie('username', obj.username);
+                        http.setCookie('username', obj.username, 60 * 60 * 24 * 3);
                         this.name = obj.username;
-                        this.hideLogin();
-                        if (this.loginHandler)
-                            this.loginHandler();
+                        this.loadUserInfo().then(() => {
+                            this.hideLogin();
+                            if (this.loginHandler)
+                                this.loginHandler();
+                        })
                     }
                 })
             } else {
@@ -47,8 +50,9 @@ export class User {
     showLogin(cb?) {
         console.log('show mask');
         if (director.config.platform == 'web') {
-            // window.top.location.href = window.location.origin + "/login";
-            alert("请先登录海知平台");
+            // window.top.location.href = window.location.origin + "/login.html";
+            window.top['redirect']();
+            //alert("请先登录海知平台");
         } else {
             document.body.style.background = 'white';
             director.sceneManager.current.addMask(0xffffff);
@@ -68,6 +72,24 @@ export class User {
         return this.name != undefined && this.name != "";
     }
 
+    public loadUserInfo() {
+        let promise = Promise.resolve();
+        let maxLevel = 0;
+        // if (http.getQueryString('login')) {
+        for (let i = 1; i < director.config.game.totalLevel; i++) {
+            let data = lStorage.uploadRecord(i);
+            if (data) {
+                maxLevel = data.rank == 1 ? data.level + 1 : data.level;
+            }
+        }
+        if (maxLevel > 0)
+            promise = promise.then(() => director.request.get('update_level', { user: this.name, level: maxLevel }));
+        // }
+        return promise.then(() => director.request.get('get_user_info', { user: this.name }).then(d => {
+            this._unlockedLevel = parseInt(d.data.level);
+        }));
+    }
+
     public load(): Promise<any> {
         if (director.config.platform == 'web')
             this.name = http.getQueryString('username');
@@ -75,20 +97,18 @@ export class User {
             this.name = http.getCookie('username');
 
         if (this.name) {
-            return director.request.get('get_user_info', { user: this.name }).then(d => {
-                console.log(d);
-                this._unlockedLevel = parseInt(d.data.level);
-            });
+            return this.loadUserInfo();
         } else {
-            if (localStorage.unlockedLevel == "undefined" || localStorage.unlockedLevel == undefined)
-                localStorage.unlockedLevel = 1;
-            this._unlockedLevel = parseInt(localStorage.unlockedLevel);
+            if (!lStorage.has('unlockedLevel'))
+                lStorage.set('unlockedLevel', 1);
+            this._unlockedLevel = lStorage.getNum('unlockedLevel');
             return Promise.resolve();
         }
     }
 
     set unlockedLevel(v) {
-        localStorage.unlockedLevel = this._unlockedLevel = v;
+        this._unlockedLevel = v;
+        lStorage.set('unlockedLevel', v);
         if (this.name) {
             director.request.get('update_user_info', { user: this.name, level: v });
         }
