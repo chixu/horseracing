@@ -326,7 +326,12 @@ export class MainScene extends Scene {
 
         let rank = '';
         let playerRank;
-        let sortedTracks = array.sortDesc(this.tracks, 'profit');
+        let alltracks = [];
+        for (let i = 0; i < this.tracks.length; i++) {
+            console.log(this.tracks[i].profit);
+            alltracks.push(this.tracks[this.tracks.length - 1 - i]);
+        }
+        let sortedTracks = array.sortDescApprox(alltracks, 'profit');
         for (let i = 0; i < sortedTracks.length; i++) {
             // console.log(sortedTracks[i].profit);
             let t: CandleTrack = sortedTracks[i]

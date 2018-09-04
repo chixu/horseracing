@@ -190,7 +190,7 @@ export class MultiMainScene extends MainScene {
         let rank = '';
         let playerRank;
         let allPlayers = [];
-        for (let i = 1; i < this.tracks.length; i++) {
+        for (let i = this.tracks.length - 1; i >= 0; i--) {
             let t: CandleTrack = this.tracks[i];
             let name = t.stockName;
             let d = '(' + date.dateToYYmmdd(t.startDate) + '-' + date.dateToYYmmdd(t.endDate) + ')';
@@ -205,7 +205,7 @@ export class MultiMainScene extends MainScene {
             console.log(otherPlayers[i].n, otherPlayers[i].s);
             allPlayers.push({ name: otherPlayers[i].n, profit: otherPlayers[i].s });
         }
-        let sortedTracks = array.sortDesc(allPlayers, 'profit');
+        let sortedTracks = array.sortDescApprox(allPlayers, 'profit');
 
         for (let i = 0; i < sortedTracks.length; i++) {
 
