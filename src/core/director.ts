@@ -15,6 +15,9 @@ import { SpriteSheetResource } from "./spriteSheetResource";
 import { Socket } from "./socket";
 import { SceneManager } from "./sceneManager";
 import { User } from "../user";
+import { Tracker } from "./tracker/tracker";
+import { GATracker } from "./tracker/gaTracker";
+import { AppInsightsTracker } from "./tracker/appInsightsTracker";
 import { SelectionScene } from "../selectionScene";
 import { ServiceManager } from "./service/serviceManager";
 import { LayoutService } from "./service/layoutService";
@@ -42,7 +45,10 @@ export let renderer: PIXI.SystemRenderer;
 export let stage: PIXI.Container;
 export let app;
 export let socket: Socket = new Socket();
-let rect;
+export let tracker: Tracker = new Tracker();
+tracker.addListener(new GATracker());
+tracker.addListener(new AppInsightsTracker());
+// let rect;
 // export let appContext: AppContext;
 // export let launchTime: number;
 // export let config: any;
@@ -107,8 +113,10 @@ export function run() {
     config.socketUrl = "ws://132.232.37.157:8081";
     if (config.env == 'dev')
         config.apiDomain = window.location.origin + `/horseriding/api/`;
+        // config.apiDomain = `http://localhost/horseriding/api/`;
     else
         config.apiDomain = window.location.origin + `/game/`;
+    // config.apiDomain = `http://localhost/horseriding/api/`;
     config.dataDomain = 'data/';
 
     renderer = createRenderer(config);

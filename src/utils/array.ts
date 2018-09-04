@@ -17,3 +17,10 @@ export function insertAsc(arr: any[], element) {
     }
     arr.push(element);
 }
+
+export function remove<T>(arr: T[], object: T) {
+    let i = arr.indexOf(object);
+    if (i >= 0) {
+      arr.splice(i, 1);
+    }
+  }

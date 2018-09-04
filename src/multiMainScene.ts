@@ -31,6 +31,7 @@ export class MultiMainScene extends MainScene {
         let d = director.socket.prevData
         data.mode = GameMode.Multi;
         super(data);
+        this.sceneName = "多人游戏";
         this.playersData = d.u;
         this.owner = d.o == 1;
         this.isReady = false;

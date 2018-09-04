@@ -6,7 +6,7 @@ import { Axis } from "./component/axis";
 import { Label } from "./core/component/label";
 // import * as login from "./user";
 import { ButtonGroup } from "./core/component/buttonGroup";
-import { RectButton } from "./core/component/RectButton";
+import { RectButton } from "./core/component/rectButton";
 import { MainScene } from "./mainScene";
 import { SinglePlayerScene } from "./singlePlayerScene";
 import { MultiPlayerScene } from "./multiPlayerScene";
@@ -16,6 +16,7 @@ export class SelectionScene extends Scene {
 
     constructor() {
         super();
+        this.sceneName = "初始界面";
         let l = new Label("多空赛马", { fontSize: 50 });
         this.addChild(l);
         l.position.set(director.config.width / 2, 150);

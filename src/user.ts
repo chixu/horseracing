@@ -1,6 +1,7 @@
 import * as http from "./utils/http";
+import * as math from "./utils/math";
 import * as director from "./core/director";
-import * as lStorage from "./component/localStorage";
+import * as lStorage from "./component/LocalStorage";
 declare var md5;
 
 
@@ -30,7 +31,8 @@ export class User {
                     } else {
                         let obj = JSON.parse(res);
                         http.setCookie('username', obj.username, 60 * 60 * 24 * 3);
-                        this.name = obj.username;
+                        // this.name = obj.username;
+                        this.setName(obj.username);
                         this.loadUserInfo().then(() => {
                             this.hideLogin();
                             if (this.loginHandler)
@@ -90,11 +92,20 @@ export class User {
         }));
     }
 
+    public setName(name) {
+        this.name = name;
+        if (name) {
+            director.tracker.setUser(name);
+        }else{
+            director.tracker.setUser("Guest"+math.randomInteger(999999));
+        }
+    }
+
     public load(): Promise<any> {
         if (director.config.platform == 'web')
-            this.name = http.getQueryString('username');
+            this.setName(http.getQueryString('username'));
         else
-            this.name = http.getCookie('username');
+            this.setName(http.getCookie('username'));
 
         if (this.name) {
             return this.loadUserInfo();

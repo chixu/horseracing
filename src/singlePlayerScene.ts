@@ -14,6 +14,7 @@ export class SinglePlayerScene extends Scene {
 
     constructor() {
         super();
+        this.sceneName = "单人选关";
         let l = new Label("选择关卡", { fontSize: 50 });
         this.addChild(l);
         l.position.set(director.config.width / 2, 150);

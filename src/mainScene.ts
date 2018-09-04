@@ -5,9 +5,9 @@ import { Command } from "./core/socket";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
 import { LocalDataAdapter } from "./component/dataAdapter";
-import * as lStorage from "./component/localStorage";
+import * as lStorage from "./component/LocalStorage";
 import { Label } from "./core/component/label";
-import { RectButton } from "./core/component/RectButton";
+import { RectButton } from "./core/component/rectButton";
 import * as http from "./utils/http";
 import * as date from "./utils/date";
 import * as graphic from "./utils/graphic";
@@ -17,6 +17,7 @@ import * as array from "./utils/array";
 import { SelfTrack } from "./component/selfTrack";
 import { SinglePlayerScene } from "./singlePlayerScene";
 import { RecordScene } from "./recordScene";
+import { Graphics } from "pixi.js";
 // import $ from "jquery";
 export const START_CASH = 100000;
 
@@ -51,10 +52,11 @@ export class MainScene extends Scene {
     history: { i: number, time: any }[];
     options;
     startTime;
+    loadingPanel: PIXI.Container;
 
     constructor(options) {
         super();
-
+        this.sceneName = "单人游戏";
         this.options = options;
         this.gameMode = options.mode == undefined ? GameMode.Normal : options.mode;
         this.numTracks = options.n || 3;
@@ -137,6 +139,7 @@ export class MainScene extends Scene {
 
     getData() {
         let dataAdapter = new LocalDataAdapter(this);
+        this.startLoading();
         return dataAdapter.getData().then(datas => {
             console.log(datas);
             this.tracks[0].setDatas();
@@ -145,6 +148,7 @@ export class MainScene extends Scene {
                 i++
                 this.tracks[i].setDatas(datas[k], k);
             }
+            this.stopLoading();
             this.dataReceived();
         });
     }
@@ -288,7 +292,7 @@ export class MainScene extends Scene {
             if (director.user.isLogin)
                 director.sceneManager.push(new RecordScene());
             else
-                director.user.showLogin(()=>director.sceneManager.push(new RecordScene()));
+                director.user.showLogin(() => director.sceneManager.push(new RecordScene()));
         }
         this.winPanel.addChild(rank);
         let replay2 = new RectButton(180, 60, 0x00ff00);
@@ -336,7 +340,7 @@ export class MainScene extends Scene {
             rank += (i + 1) + '. ' + name + d + '  ' + t.profit.toFixed(2) + '%\n';
         }
         console.log(rank);
-        let l3 = new Label(rank, { fontSize: 30 });
+        let l3 = new Label(rank, { fontSize: 28 });
         this.winPanel.addChild(l3);
         l3.position.set(director.config.width / 2, 410);
 
@@ -367,23 +371,47 @@ export class MainScene extends Scene {
             data: JSON.stringify(resData),
             rank: playerRank
         }
+        director.tracker.event({
+            cat: 'game',
+            action: 'over',
+            label: 'score',
+            value: this.profit
+        });
+        director.tracker.event({
+            cat: 'game',
+            action: 'over',
+            label: 'time',
+            value: this.gameTime
+        });
+        director.tracker.event({
+            name: 'Game Over',
+            properties: {
+                'Level': this.numTracks,
+                'User': director.user.isLogin ? director.user.name : ""
+            },
+            measurements: {
+                'Score': this.profit,
+                'Time': this.gameTime,
+                'Rank': playerRank
+            }
+        });
         if (director.user.isLogin) {
             director.request.post('upload_score', postData);
         } else {
             lStorage.setRecord(postData);
         }
 
-        director.request.get('break_record', {
-            level: this.numTracks,
-            value: this.profit,
-            user: director.user.name
-        }).then(res => {
-            if (!res.err && res.data) {
-                let l4 = new Label(`你的收益超过了其他理财师，快去龙虎榜看一看！`, { fontSize: 27, fill: 0xffd700 });
-                this.winPanel.addChild(l4);
-                l4.position.set(director.config.width / 2, 270);
-            }
-        })
+        // director.request.get('break_record', {
+        //     level: this.numTracks,
+        //     value: this.profit,
+        //     user: director.user.name
+        // }).then(res => {
+        //     if (!res.err && res.data) {
+        //         let l4 = new Label(`你的收益超过了其他理财师，快去龙虎榜看一看！`, { fontSize: 27, fill: 0xffd700 });
+        //         this.winPanel.addChild(l4);
+        //         l4.position.set(director.config.width / 2, 270);
+        //     }
+        // })
 
         if (playerRank == 1) {
             if (director.user.unlockedLevel == this.numTracks)
@@ -401,6 +429,10 @@ export class MainScene extends Scene {
         // for (let i = 0; i < this.tracks.length; i++) {
         //     console.log(this.tracks[i].profit);
         // }
+    }
+
+    get gameTime(): number {
+        return this.history[this.history.length - 1].time;
     }
 
     get profit(): number {
@@ -447,5 +479,24 @@ export class MainScene extends Scene {
         });
         if (this.gameMode == GameMode.Normal)
             this.next();
+    }
+
+    startLoading() {
+        if (this.loadingPanel == undefined) {
+            this.loadingPanel = new PIXI.Container();
+            let r = graphic.rectangle(director.config.width, director.config.height, 0);
+            r.alpha = 0.7;
+            let l = new Label('加载中...', { align: 'left', fontSize: 25 });
+            this.loadingPanel.addChild(r);
+            this.loadingPanel.addChild(l);
+            l.position.set(260, 430);
+        }
+        this.loadingPanel.interactive = true;
+        this.addChild(this.loadingPanel);
+    }
+
+    stopLoading() {
+        if (this.loadingPanel)
+            this.removeChild(this.loadingPanel);
     }
 }

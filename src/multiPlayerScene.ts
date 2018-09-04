@@ -3,7 +3,7 @@ import { Candle } from "./component/candle";
 import * as director from "./core/director";
 import * as graphic from "./utils/graphic";
 import { Label } from "./core/component/label";
-import { RectButton } from "./core/component/RectButton";
+import { RectButton } from "./core/component/rectButton";
 import { Command } from "./core/socket";
 import { RoomScene } from "./roomScene";
 import { SelectionScene } from "./selectionScene";
@@ -14,6 +14,7 @@ export class MultiPlayerScene extends Scene {
 
     constructor() {
         super();
+        this.sceneName = "多人游戏";
         let l = new Label("赛场列表", { fontSize: 50 });
         this.addChild(l);
         l.position.set(director.config.width / 2, 100);

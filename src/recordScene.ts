@@ -1,6 +1,6 @@
 
 import { Label } from "./core/component/label";
-import { RectButton } from "./core/component/RectButton";
+import { RectButton } from "./core/component/rectButton";
 import { ButtonGroup } from "./core/component/buttonGroup";
 import { Scene } from "./core/scene";
 import * as director from "./core/director";
@@ -12,6 +12,7 @@ export class RecordScene extends Scene {
 
     constructor() {
         super();
+        this.sceneName = "龙虎榜";
         let l = new Label("排行榜", { fontSize: 50 });
         this.addChild(l);
         l.position.set(director.config.width / 2, 100);
