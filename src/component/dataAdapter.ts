@@ -39,7 +39,7 @@ export class LocalDataAdapter extends DataAdapter {
         let datas = {};
         let etcs = {}
         for (let i = 0; i < this.mainScene.numTracks; i++) {
-            console.log(`/data/${stockids[i]}.json`);
+            // console.log(`/data/${stockids[i]}.json`);
             promise = promise.then(() => {
                 return http.get(director.config.dataDomain + `${stockids[i]}.json`).then(data => {
                     let d = JSON.parse(data);
@@ -79,7 +79,7 @@ export class LocalDataAdapter extends DataAdapter {
                     }
                 }
             }
-            console.log(this.dataDates);
+            // console.log(this.dataDates);
             let resData = {};
             for (let k in datas) {
                 let d = datas[k];

@@ -49,7 +49,7 @@ export class Request {
         return http.get(this.getUrl(api, data))
             .then((res) => {
                 let r;
-                console.log(res);
+                // console.log(res);
                 try {
                     r = JSON.parse(res);
                 } catch{
@@ -65,7 +65,7 @@ export class Request {
         return http.post(this.getUrl(api), data)
             .then((res) => {
                 let r;
-                console.log(res);
+                // console.log(res);
                 try {
                     r = JSON.parse(res);
                 } catch{

@@ -60,7 +60,7 @@ export class MainScene extends Scene {
         this.options = options;
         this.gameMode = options.mode == undefined ? GameMode.Normal : options.mode;
         this.numTracks = options.n || 3;
-        // this.numTracks = 4;
+        // this.numTracks = 6;
         this.totalRound = options.r || 25;
         this.scoreLabel = new Label('', { align: 'left', fontSize: 25 });
         this.scoreLabel.position.set(5, 5);
@@ -73,7 +73,6 @@ export class MainScene extends Scene {
         horseButton.text = MainScene.renderHorse ? "显示K线" : "显示赛马";
         horseButton.position.set(director.config.width - 50, 20)
         horseButton.clickHandler = () => {
-            console.log(horseButton.text);
             if (horseButton.text == "显示赛马") {
                 horseButton.text = "显示K线";
                 MainScene.renderHorse = true;
@@ -141,7 +140,7 @@ export class MainScene extends Scene {
         let dataAdapter = new LocalDataAdapter(this);
         this.startLoading();
         return dataAdapter.getData().then(datas => {
-            console.log(datas);
+            // console.log(datas);
             this.tracks[0].setDatas();
             let i = 0;
             for (let k in datas) {
@@ -284,17 +283,6 @@ export class MainScene extends Scene {
         rect.interactive = true;
         rect.alpha = 0.7;
 
-
-        let rank = new RectButton(180, 60, 0x00ff00);
-        rank.text = "龙虎榜";
-        rank.position.set(director.config.width / 2, 670);
-        rank.clickHandler = () => {
-            if (director.user.isLogin)
-                director.sceneManager.push(new RecordScene());
-            else
-                director.user.showLogin(() => director.sceneManager.push(new RecordScene()));
-        }
-        this.winPanel.addChild(rank);
         let replay2 = new RectButton(180, 60, 0x00ff00);
         replay2.text = "换股";
         replay2.position.set(director.config.width / 2, 760);
@@ -311,24 +299,62 @@ export class MainScene extends Scene {
         exit.position.set(director.config.width / 2, 850);
         this.winPanel.addChild(exit);
 
-        let l1 = new Label("恭喜你", { fontSize: 50 });
+    }
+
+    renderGameOverUi2(playerRank) {
+
+        let rank = new RectButton(180, 60, 0x00ff00);
+        rank.position.set(director.config.width / 2, 670);
+        rank.text = director.user.isLogin ? "龙虎榜" : "登录";
+        rank.clickHandler = () => {
+            if (director.user.isLogin) {
+                director.sceneManager.push(new RecordScene());
+            } else {
+                director.user.showLogin(() => director.sceneManager.push(new RecordScene()));
+            }
+        }
+        this.winPanel.addChild(rank);
+
+        let l1;
+        if (playerRank == 1)
+            l1 = new Label("恭喜你", { fontSize: 50, fill: 0xffd700 });
+        else
+            l1 = new Label("游戏结束", { fontSize: 50 });
         this.winPanel.addChild(l1);
         l1.position.set(director.config.width / 2, 50);
+
+
+        if (playerRank == 1){
+            let l2 = new Label("赶快"+(director.user.isLogin?"":"登录海知账号")+"去龙虎榜看下你的排名吧!", { fontSize: 25, fill: 0xffd700 });
+            this.winPanel.addChild(l2);
+            l2.position.set(director.config.width / 2, 250);
+        }
+
+        if (playerRank == 1) {
+            if (director.user.unlockedLevel == this.numTracks)
+                director.user.unlockedLevel++;
+            if (director.user.unlockedLevel <= SinglePlayerScene.totalLevel) {
+                let next = new RectButton(180, 60, 0x00ff00);
+                next.text = "下一关";
+                next.position.set(director.config.width / 2, 580);
+                next.clickHandler = () => {
+                    director.sceneManager.replace(new MainScene({ n: director.user.unlockedLevel, mode: this.gameMode }));
+                }
+                this.winPanel.addChild(next);
+            }
+        }
     }
 
     gameOver(data?) {
-        this.renderGameOverUi();
         //uploadScore
         // let percent = this.totalAmount / START_CASH - 1;
         // console.log('percent', percent);
         //let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n击败了${(1 / (1 + Math.pow(2, -30 * percent)) * 100).toFixed(2)}%的玩家`, { fontSize: 40 });
-
-
+        this.renderGameOverUi();
         let rank = '';
         let playerRank;
         let alltracks = [];
         for (let i = 0; i < this.tracks.length; i++) {
-            console.log(this.tracks[i].profit);
             alltracks.push(this.tracks[this.tracks.length - 1 - i]);
         }
         let sortedTracks = array.sortDescApprox(alltracks, 'profit');
@@ -344,12 +370,12 @@ export class MainScene extends Scene {
             }
             rank += (i + 1) + '. ' + name + d + '  ' + t.profit.toFixed(2) + '%\n';
         }
-        console.log(rank);
+        // console.log(rank);
         let l3 = new Label(rank, { fontSize: 28 });
         this.winPanel.addChild(l3);
         l3.position.set(director.config.width / 2, 410);
 
-        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n赛场排名第${playerRank}`, { fontSize: 40 });
+        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n赛场排名第${playerRank}`, { fontSize: 40, fill: 0xffffff });
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
 
@@ -417,23 +443,7 @@ export class MainScene extends Scene {
         //         l4.position.set(director.config.width / 2, 270);
         //     }
         // })
-
-        if (playerRank == 1) {
-            if (director.user.unlockedLevel == this.numTracks)
-                director.user.unlockedLevel++;
-            if (director.user.unlockedLevel <= SinglePlayerScene.totalLevel) {
-                let next = new RectButton(180, 60, 0x00ff00);
-                next.text = "下一关";
-                next.position.set(director.config.width / 2, 580);
-                next.clickHandler = () => {
-                    director.sceneManager.replace(new MainScene({ n: director.user.unlockedLevel, mode: this.gameMode }));
-                }
-                this.winPanel.addChild(next);
-            }
-        }
-        // for (let i = 0; i < this.tracks.length; i++) {
-        //     console.log(this.tracks[i].profit);
-        // }
+        this.renderGameOverUi2(playerRank);
     }
 
     get gameTime(): number {

@@ -112,7 +112,7 @@ export function run() {
     // config.dataDomain = '/data/';
     config.socketUrl = "ws://132.232.37.157:8081";
     if (config.env == 'dev')
-        config.apiDomain = window.location.origin + `/horseriding/api/`;
+        config.apiDomain = window.location.protocol + '//' + window.location.hostname + `/horseriding/api/`;
         // config.apiDomain = `http://localhost/horseriding/api/`;
     else
         config.apiDomain = window.location.origin + `/game/`;

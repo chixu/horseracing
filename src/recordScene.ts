@@ -37,7 +37,7 @@ export class RecordScene extends Scene {
         });
         bg.position.set(director.config.width / 2, 170);
         bg.selectHandler = (idx) => {
-            console.log(idx, 'selected');
+            // console.log(idx, 'selected');
             this.getRankings(idx + 1);
         }
         this.addChild(bg);
@@ -55,7 +55,7 @@ export class RecordScene extends Scene {
     }
 
     renderRankings(data) {
-        console.log(data);
+        // console.log(data);
         this.recordContainer.removeChildren();
         if (data.length == 0) {
             let l = new Label("还没有排名,快去挑战吧", { fontSize: 38 });
