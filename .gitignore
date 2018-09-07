@@ -2,7 +2,6 @@ node_modules
 typings
 .DS_Store
 .vscode/settings.json
-images
 data
 lib
 js
