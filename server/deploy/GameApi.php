@@ -54,7 +54,7 @@ class GameApi{
         // $sql = sprintf("select * from %s.game_record where level = %s order by value desc, date desc limit 10"
         $sql = sprintf("select t2.username, t2.value, t2.date from 
         (select username, max(value) as value from %s.game_record 
-        where level = %s group by username) as t
+        where level = %s and rank = 1 group by username) as t
         left join %s.game_record as t2
         on t.username = t2.username and t.value = t2.value order by t2.value desc, date desc"
         , $this->dt,

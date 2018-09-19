@@ -31,7 +31,12 @@ $self_name = $this->session->userdata('username');
 
 <body>
 <div class="bg-white row wrapper" style="margin: 1% 0;min-height: 800px;">
-
+    <div style="position:fixed;right: 0px;bottom:0px;background-color: white;">
+        <img src="../assets/game/images/qr.png"/>
+        <div style="text-align: center;width: 100%;margin-bottom:5px">
+                扫描二维码在手机上玩
+        </div>
+    </div>
     <iframe style="display: block; width: 600px; height: 900px; margin: auto;" frameborder="0">
     </iframe>
     <script>
@@ -40,7 +45,7 @@ $self_name = $this->session->userdata('username');
         function redirect() {
             window.location.href = window.location.origin + "/login";
         }
-
+        
         function resize() {
             let height = Math.min(900, Math.max(600, window.innerHeight));
             let width = Math.round(height / 3 * 2);
