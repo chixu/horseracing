@@ -10,6 +10,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="assets/icons/icon.ico" />
+    <script>
+        if(window.top.location.search.indexOf('platform=web')>-1)
+            window.top.location.href = window.location.origin + "/game";
+    </script>
     <script src="./lib/is.min.js" charset="utf-8"></script>
     <script src="./lib/aes.js" charset="utf-8"></script>
     <script src="./lib/es6-promise.min.js" charset="utf-8"></script>
