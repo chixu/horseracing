@@ -11,6 +11,8 @@ export class RectButton extends PIXI.Container {
     label: Label;
     border: PIXI.Graphics;
     textHeight: number;
+    shortClick: number = 0;
+    downTimer: number
 
     constructor(w, h, color = 0xffffff) {
         super();
@@ -74,6 +76,7 @@ export class RectButton extends PIXI.Container {
 
     private buttonDownHandler(e) {
         if (!this._enabled) return;
+        this.downTimer = (new Date()).getTime();
         if (this.downHandler)
             this.downHandler(this);
     }
@@ -86,6 +89,7 @@ export class RectButton extends PIXI.Container {
 
     private buttonClickedHandler(e) {
         if (!this._enabled) return;
+        if (this.shortClick > 0 && this.shortClick < (new Date()).getTime() - this.downTimer) return;
         if (this.clickHandler)
             this.clickHandler(this);
     }
