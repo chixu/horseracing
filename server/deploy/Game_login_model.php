@@ -68,10 +68,10 @@ class Game_login_model extends CI_Model{
 		return array("data"=>$d);
     }
 
-    public function break_record(){
-		$api = new GameApi('ht',$this->db);
-		$api->break_record();
-   }
+//     public function break_record(){
+// 		$api = new GameApi('ht',$this->db);
+// 		$api->break_record();
+//    }
 
 
 	public function get_score(){
@@ -79,25 +79,44 @@ class Game_login_model extends CI_Model{
 		$api->get_score();
 	}
 
-    public function upload_score(){
+    public function upload_score($u){
 		$api = new GameApi('ht',$this->db);
-		$api->upload_score();
+		$api->upload_score($u);
 	}
 
-    public function get_user_info(){
+    public function get_user_info($u){
         $api = new GameApi('ht',$this->db);
-        $api->get_user_info();
+        $api->get_user_info($u);
     }
 
-    public function update_user_info(){
+    public function update_user_info($u){
         $api = new GameApi('ht',$this->db);
-        $api->update_user_info();
+        $api->update_user_info($u);
     }
-	
-	public function update_level(){
+    
+    public function get_stock(){
         $api = new GameApi('ht',$this->db);
-        $api->update_level();
+        $api->get_stock();
     }
+
+    public function get_user_match($u){
+        $api = new GameApi('ht',$this->db);
+        $api->get_user_match($u);
+    }
+
+    public function get_user_submatch($u){
+        $api = new GameApi('ht',$this->db);
+        $api->get_user_submatch($u);
+    }
+
+    public function create_submatch($u){
+        $api = new GameApi('ht',$this->db);
+        $api->create_submatch($u);
+    }
+	// public function update_level(){
+    //     $api = new GameApi('ht',$this->db);
+    //     $api->update_level();
+    // }
 
 }
 

@@ -4,6 +4,10 @@
 
 <?php $this->load->view('./template/head', array('title' => '海知多空赛马')); ?>
 
+<script src="<?php
+    if(isset($_POST['redirect']))
+        echo 'window.location.href = window.location.origin + "/login";';
+?>"></script>
 <script src="<?php echo base_url('assets/js/echarts.min.js'); ?>"></script>
 <script src="<?php echo base_url('assets/js/macarons.js'); ?>"></script>
 <style>
@@ -41,7 +45,10 @@ $self_name = $this->session->userdata('username');
     </iframe>
     <script>
         var iframe = document.getElementsByTagName('iframe')[0];
-        iframe.src = "/assets/game/index.html?platform=web<?php if($state_login)echo "&username=$self_name"; ?>" + (document.referrer.indexOf('login')>-1?'&login=1':'');
+        iframe.src = "/assets/game/index.html?platform=web<?php 
+            //if($state_login)echo "&username=$self_name";
+            if(isset($_GET['match']))echo "&match=".$_GET['match'];
+        ?>" + (document.referrer.indexOf('login')>-1?'&login=1':'');
         function redirect() {
             window.location.href = window.location.origin + "/login";
         }

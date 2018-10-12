@@ -6,10 +6,26 @@ import { ScrollPanel } from "./core/component/scrollPanel";
 import { Scene } from "./core/scene";
 import * as director from "./core/director";
 import * as graphic from "./utils/graphic";
+import * as http from "./utils/http";
+import * as math from "./utils/math";
 import { Command } from "./core/socket";
 import { MultiPlayerScene } from "./multiPlayerScene";
 import { MultiMainScene } from "./multiMainScene";
 import { SelectionScene } from "./selectionScene";
+import { MatchMainScene } from "./matchMainScene";
+import { GameMode } from "./mainScene";
+
+export class MatchStatusCode {
+    public static done = 2;
+    public static progress = 1;
+}
+
+export class MatchStatusName {
+    public static done = "已完成";
+    public static progress = "进行中";
+    public static notStart = "未开始";
+    public static end = "已结束";
+}
 
 export class MatchListScene extends Scene {
     // playerContainer: PIXI.Container;
@@ -18,13 +34,15 @@ export class MatchListScene extends Scene {
     // exitButton;
     scrollPanel: ScrollPanel;
     lastButtonY = 50;
-    buttonGap = 110;
+    buttonGap = 100;
     confirmPanel: PIXI.Container;
     confirmMatchTitle: Label;
     matchData;
+    shownIndex;
 
-    constructor() {
+    constructor(index?) {
         super();
+        this.shownIndex = index;
         this.sceneName = "赛场列表";
         let l = new Label("赛场列表", { fontSize: 50 });
         this.addChild(l);
@@ -33,16 +51,24 @@ export class MatchListScene extends Scene {
 
     enter() {
         super.enter();
-        director.request.get('get_match', { level: 'user' }).then(res => {
+        // this.addMatch({ title: http.getQueryString('title') });
+        director.request.post('get_user_match', { user: director.user.name }).then(res => {
+            console.log(res);
             if (res.err) {
                 console.log(res.err);
-            } else
-                this.init(res);
+            } else {
+                this.init(res.data);
+                if (this.shownIndex) {
+                    for (let i = 0; i < this.matchData.length; i++) {
+                        let data = this.matchData[i];
+                        if (data.id == this.shownIndex) {
+                            this.showConfirmScene(i);
+                            return;
+                        }
+                    }
+                }
+            }
         });
-        this.init([{ title: '大赛1' },
-        { title: '大赛12' },
-        { title: '大赛13' },
-        { title: '大赛14' }]);
     }
 
     init(res) {
@@ -60,8 +86,8 @@ export class MatchListScene extends Scene {
             b.position.set(director.config.width / 2, 700);
             this.addChild(b);
         } else {
-            this.scrollPanel = new ScrollPanel(director.config.width - 100, 530);
-            this.scrollPanel.position.set(50, 180);
+            this.scrollPanel = new ScrollPanel(director.config.width - 60, 530);
+            this.scrollPanel.position.set(30, 180);
             this.addChild(this.scrollPanel);
             for (let i = 0; i < res.length; i++) {
                 let btn = this.addMatch(res[i]);
@@ -78,19 +104,40 @@ export class MatchListScene extends Scene {
     }
 
     addMatch(item, callback?) {
-        let b = new RectButton(360, 80, 0xff0000);
+        let status = this.getStatus(item);
+
+        let b = new RectButton(500, 80, status == MatchStatusName.progress ? 0x00ff00 : 0xff0000);
         b.shortClick = 300;
-        b.text = item.title;
-        b.clickHandler = () => this.showConfirmScene(b['index']);
-        b.position.set(director.config.width / 2 - 50, this.lastButtonY);
+        // b.text = item.title;
+        if (status == MatchStatusName.progress)
+            b.clickHandler = () => this.showConfirmScene(b['index']);
+        b.position.set(director.config.width / 2 - 30, this.lastButtonY);
+        let title: string = item.title;
+        if (title.length > 18)
+            title = title.substr(0, 18) + "...";
+        let l1 = new Label(title, { align: 'left', fontSize: math.clamp(30 - (title.length - 13) * 2, 22, 30) });
+        l1.position.set(-235, -15);
+        b.addChild(l1);
+        let l2 = new Label(status, { fontSize: 20 });
+        l2.position.set(205, 10);
+        b.addChild(l2);
         this.lastButtonY += this.buttonGap
         this.scrollPanel.addItem(b);
         return b;
     }
 
+    getStatus(data): string {
+        let t = parseInt(data.status) == MatchStatusCode.done ? MatchStatusName.done : MatchStatusName.progress;
+        if (data.start == "1") t = MatchStatusName.notStart;
+        if (data.end == "1") t = MatchStatusName.end;
+        return t;
+    }
+
     showConfirmScene(index) {
+        let data = this.matchData[index];
+        if (this.getStatus(data) != MatchStatusName.progress) return;
         if (this.confirmPanel) {
-            this.confirmMatchTitle.value = this.matchData[index].title;
+            this.confirmMatchTitle.value = data.title;
         } else {
             this.confirmPanel = new PIXI.Container();
             let bg = graphic.rectangle(director.config.width, director.config.height);
@@ -101,7 +148,7 @@ export class MatchListScene extends Scene {
             this.confirmPanel.addChild(l);
             l.position.set(director.config.width / 2, 300);
 
-            let l2 = new Label(this.matchData[index].title, { fontSize: 40 });
+            let l2 = new Label(data.title, { fontSize: 40 });
             this.confirmPanel.addChild(l2);
             l2.position.set(director.config.width / 2, 380);
 
@@ -113,7 +160,25 @@ export class MatchListScene extends Scene {
             let b = new RectButton(220, 65, 0x00ff00);
             b.text = '进入比赛';
             b.clickHandler = () => {
-
+                this.addMask();
+                console.log(director.user.name, data.id);
+                return director.request.post('get_user_submatch', {
+                    user: director.user.name,
+                    match: data.id
+                }).then(res => {
+                    if (!res.err) {
+                        res = res.data;
+                        director.sceneManager.replace(new MatchMainScene({
+                            n: parseInt(res.level),
+                            r: parseInt(res.round),
+                            code: res.code,
+                            matchid: res.matchid,
+                            submatchid: res.id,
+                            enddate: res.enddate.split(' ')[0],
+                            lastmatch: res.last
+                        }));
+                    }
+                });
             };
             b.position.set(director.config.width / 2, 600);
             this.confirmPanel.addChild(b);

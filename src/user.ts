@@ -30,7 +30,7 @@ export class User {
                         alert("账号或密码错误");
                     } else {
                         let obj = JSON.parse(res);
-                        http.setCookie('username', obj.username, 60 * 60 * 24 * 3);
+                        // http.setCookie('username', obj.username, 60 * 60 * 24 * 3);
                         // this.name = obj.username;
                         this.setName(obj.username);
                         this.loadUserInfo().then(() => {
@@ -85,9 +85,9 @@ export class User {
             }
         }
         if (maxLevel > 0)
-            promise = promise.then(() => director.request.get('update_level', { user: this.name, level: maxLevel }));
+            promise = promise.then(() => director.request.post('update_user_info', { level: maxLevel }));
         // }
-        return promise.then(() => director.request.get('get_user_info', { user: this.name }).then(d => {
+        return promise.then(() => director.request.get('get_user_info').then(d => {
             this._unlockedLevel = parseInt(d.data.level);
         }));
     }
@@ -96,37 +96,46 @@ export class User {
         this.name = name;
         if (name) {
             director.tracker.setUser(name);
-        }else{
-            director.tracker.setUser("Guest"+math.randomInteger(999999));
+        } else {
+            director.tracker.setUser("Guest" + math.randomInteger(999999));
         }
     }
 
     public load(): Promise<any> {
-        if (director.config.platform == 'web')
-            this.setName(http.getQueryString('username'));
-        else
-            this.setName(http.getCookie('username'));
-
-        if (this.name) {
-            return this.loadUserInfo();
-        } else {
-            if (!lStorage.has('unlockedLevel'))
+        // if (director.config.platform == 'web')
+        //     this.setName(http.getQueryString('username'));
+        // else
+        //     this.setName(http.getCookie('username'));
+        return director.request.get("get_user").then(res => {
+            if(res.err){
+                if (!lStorage.has('unlockedLevel'))
                 lStorage.set('unlockedLevel', 1);
-            this._unlockedLevel = lStorage.getNum('unlockedLevel');
-            return Promise.resolve();
-        }
+                this._unlockedLevel = lStorage.getNum('unlockedLevel');
+            }else{
+                this.setName(res.name);
+                return this.loadUserInfo();
+            }
+        })
+        // if (this.name) {
+        //     return this.loadUserInfo();
+        // } else {
+        //     if (!lStorage.has('unlockedLevel'))
+        //         lStorage.set('unlockedLevel', 1);
+        //     this._unlockedLevel = lStorage.getNum('unlockedLevel');
+        //     return Promise.resolve();
+        // }
     }
 
     set unlockedLevel(v) {
         this._unlockedLevel = v;
         lStorage.set('unlockedLevel', v);
         if (this.name) {
-            director.request.get('update_user_info', { user: this.name, level: v });
+            director.request.post('update_user_info', { level: v });
         }
     }
 
     get unlockedLevel(): number {
-        console.log(this._unlockedLevel);
+        // console.log(this._unlockedLevel);
         return this._unlockedLevel;
     }
 

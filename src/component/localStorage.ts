@@ -41,7 +41,6 @@ export function setRecord(data) {
         let cur = new Date().getTime();
         let day = 24 * 60 * 60 * 1000;
         if ((data.value > score && cur - time < day) || cur - time > day) {
-            console.log('set Record');
             data['time'] = cur;
             set('l' + data.level, JSON.stringify(data));
         }

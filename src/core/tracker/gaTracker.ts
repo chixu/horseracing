@@ -29,14 +29,14 @@ export class GATracker implements Listener {
 
   event(data) {
     if (!this.ga || !data.cat) return;
-    console.log('ga event', data);
+    // console.log('ga event', data);
     // ga('send', 'event', [eventCategory], [eventAction], [eventLabel], [eventValue], [fieldsObject]);
     this.ga.send('event', data.cat, data.action, data.label, data.value);
   }
 
   setUser(name) {
     if (!this.ga) return;
-    console.log('ga userId', name);
+    // console.log('ga userId', name);
     this.ga.set('userId', name);
   }
 }

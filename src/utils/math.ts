@@ -16,8 +16,10 @@ export function randomArray(arr: any[]) {
     return a;
 }
 
-export function toFixedNumber(n:number, decimalPoint){
+export function toFixedNumber(n: number, decimalPoint=2) {
     return parseFloat(n.toFixed(decimalPoint));
 }
 
-
+export function clamp(num, min, max): number {
+    return Math.min(Math.max(num, min), max);
+};

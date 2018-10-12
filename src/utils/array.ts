@@ -10,8 +10,8 @@ export function sortDesc(arr, prop) {
 export function sortAscApprox(arr, prop, decimal = 4) {
     return arr.concat().sort(function (a, b) {
         let div = Math.pow(10, decimal);
-        let aa = Math.round(div * a[prop])/div;
-        let bb = Math.round(div * b[prop])/div;
+        let aa = Math.round(div * a[prop]) / div;
+        let bb = Math.round(div * b[prop]) / div;
         return (aa > bb) ? 1 : ((bb > aa) ? -1 : 0);
     });
 }
@@ -19,8 +19,8 @@ export function sortAscApprox(arr, prop, decimal = 4) {
 export function sortDescApprox(arr, prop, decimal = 4) {
     return arr.concat().sort(function (a, b) {
         let div = Math.pow(10, decimal);
-        let aa = Math.round(div * a[prop])/div;
-        let bb = Math.round(div * b[prop])/div;
+        let aa = Math.round(div * a[prop]) / div;
+        let bb = Math.round(div * b[prop]) / div;
         return (aa < bb) ? 1 : ((bb < aa) ? -1 : 0);
     });
 }
@@ -35,6 +35,14 @@ export function insertAsc(arr: any[], element) {
         }
     }
     arr.push(element);
+}
+
+export function toNumbers(arr) {
+    let res = [];
+    for (let i = 0; i < arr.length; i++) {
+        res.push(parseFloat(arr[i]));
+    }
+    return res;
 }
 
 export function remove<T>(arr: T[], object: T) {

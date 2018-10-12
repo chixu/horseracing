@@ -1,10 +1,13 @@
 import * as http from "./utils/http";
+import * as math from "./utils/math";
 import * as director from "./core/director";
 
 // console.log(CryptoJS.enc.Base64.parse("us5N0PxHAWuIgb0/Qc2sh5OdWBbXGady").toString());
 // let  = CryptoJS.enc.Base64.parse("zAvR2NI87bBx746n");
-let SECURITY_KEY = "bace4dd0fc47016bbace4dd0fc47016b";
-let SECURITY_IV = "cc0bd1d8d23cedb0";
+let SECURITY_KEY = CryptoJS.enc.Utf8.parse("FbcCY2yCFBwVCUE9R+6kJ4fAL4BJxxjd");
+let SECURITY_IV = CryptoJS.enc.Utf8.parse("e16ce913a20dadb8");
+
+
 function encrypt(msg: string): string {
     let encrypted = CryptoJS.AES.encrypt(msg, SECURITY_KEY, {
         iv: SECURITY_IV
@@ -14,13 +17,15 @@ function encrypt(msg: string): string {
 
 function decrypt(msg: string): string {
     let decrypted = CryptoJS.AES.decrypt(msg, SECURITY_KEY, {
-        keySize: 16,
+        // keySize: 16,
         iv: SECURITY_IV,
         mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
+        // padding: CryptoJS.pad.Pkcs7
     });
     return decrypted.toString(CryptoJS.enc.Utf8);
 }
+window['decrypt'] = decrypt;
+window['encrypt'] = encrypt;
 
 export class Request {
     // private _domain = ""
@@ -31,8 +36,11 @@ export class Request {
 
     // private get domain()
 
-    private getUrl(api, data?) {
-        let url = director.config.apiDomain + api + (director.config.env == 'dev' ? ".php" : "");
+    private getUrl(api, data?, stricturl = false) {
+        // let url = director.config.apiDomain + api + (director.config.env == 'dev' ? ".php" : "");
+        let url = director.config.apiDomain + api;
+        if (stricturl)
+            url = api;
         if (data) {
             // url += '?d=';
             let str = "";
@@ -45,8 +53,9 @@ export class Request {
             return url;
     }
 
-    get(api, data) {
-        return http.get(this.getUrl(api, data))
+    get(api, data={}, stricturl = false) {
+        // console.log(this.getUrl(api, data));
+        return http.get(this.getUrl(api, data, stricturl))
             .then((res) => {
                 let r;
                 // console.log(res);
@@ -61,7 +70,14 @@ export class Request {
             });
     }
 
-    post(api, data) {
+    post(api, data, enc = true) {
+        if (enc) {
+            let str = String.fromCharCode(math.randomInteger(48, 122)) + JSON.stringify(data);
+            // let str = JSON.stringify(data);
+            // console.log(str);
+            // console.log(encrypt(str));
+            data = { data: encodeURIComponent(encrypt(str))};
+        }
         return http.post(this.getUrl(api), data)
             .then((res) => {
                 let r;

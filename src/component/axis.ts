@@ -75,11 +75,11 @@ export class Axis extends PIXI.Container {
     renderPoints(pts: number[], color: number, lineWidth = 2) {
         let l = new PIXI.Graphics();
         l.lineStyle(lineWidth, color);
-        let gap = this.option.width / pts.length * 0.9;
+        let gap = this.option.width / pts.length * 0.85;
         l.moveTo(0, -this.heightRatio * pts[0]);
-        for (let i = 0; i < pts.length; i++)
+        for (let i = 1; i < pts.length; i++) {
             l.lineTo(i * gap, -this.heightRatio * pts[i]);
-        // console.log(pts);
+        }
         l.x = -this.option.width * 0.45;
         l.y = this.zeroPosition;
         this.graphContainer.addChild(l);
@@ -102,7 +102,7 @@ export class Axis extends PIXI.Container {
         this.renderPlayer('你', this.mainScene.profit, 0xff0000);
     }
 
-    private renderPlayer(name, score,color){
+    private renderPlayer(name, score, color) {
         let x = this.option.width / 2;
         let b = new RectButton(60, 20, color);
         b.textHeight = 16;

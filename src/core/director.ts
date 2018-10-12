@@ -19,6 +19,7 @@ import { Tracker } from "./tracker/tracker";
 import { GATracker } from "./tracker/gaTracker";
 import { AppInsightsTracker } from "./tracker/appInsightsTracker";
 import { SelectionScene } from "../selectionScene";
+import { MatchListScene } from "../matchListScene";
 import { ServiceManager } from "./service/serviceManager";
 import { LayoutService } from "./service/layoutService";
 // import { Animatable } from "./animation/animatable";
@@ -111,10 +112,11 @@ export function run() {
     // config.socketUrl = "ws://192.168.31.44:8081";
     // config.dataDomain = '/data/';
     config.socketUrl = "ws://132.232.37.157:8081";
-    if (config.env == 'dev')
-        config.apiDomain = window.location.protocol + '//' + window.location.hostname + `/horseriding/api/`;
-        // config.apiDomain = `http://localhost/horseriding/api/`;
-    else
+    // if (config.env == 'dev') {
+    //     http.setCookie('username', 'winter002');
+    //     // config.apiDomain = window.location.protocol + '//' + window.location.hostname + `/horseriding/api/`;
+    //     config.apiDomain = `http://192.168.0.136/game/`;
+    // } else
         config.apiDomain = window.location.origin + `/game/`;
     // config.apiDomain = `http://localhost/horseriding/api/`;
     config.dataDomain = 'data/';
@@ -160,7 +162,13 @@ export function run() {
         // let texture = resourceManager.texture('cat');
         // let image = new PIXI.Sprite(texture);
         // stage.addChild(image);
-        user.load().then(() => sceneManager.replace(new SelectionScene()));
+        let match = http.getQueryString('match');
+        user.load().then(() => {
+            if(match && user.isLogin)
+                sceneManager.replace(new MatchListScene(match));
+            else
+                sceneManager.replace(new SelectionScene());
+        });
     });
 
     // configure scenes
@@ -187,10 +195,36 @@ export function run() {
     //   setInterval(trackFPS, 300000)
 }
 
+export function addUpdate(obj, func?) {
+    if (sceneManager.current) {
+        // if(sceneManager.current.updates.indexOf(func) == -1);
+        func = func || obj.update;
+        sceneManager.current.updates.push({ obj: obj, func: func });
+    }
+}
+
+// export function removeUpdate(obj, func?) {
+//     if (sceneManager.current) {
+//         let updated = 
+//         for(let i = sceneManager.current.updates.length; i in sceneManager.current.updates){
+//             let d = sceneManager.current.updates[k];
+//             if(func)
+//         }
+//         // sceneManager.current.updates.splice(func, 1);
+//     }
+// }
+
 function update(elapsedFrames: number) {
     //   elapsedMS = PIXI.ticker.shared.elapsedMS;
     //   juggler.advanceTime(elapsedFrames);
     renderer.render(stage);
+    if (sceneManager.current) {
+        // console.log(sceneManager.current.updates.length);
+        let updates = sceneManager.current.updates;
+        for (let k in updates) {
+            updates[k].func.apply(updates[k].obj);
+        }
+    }
 }
 
 // https://github.com/pixijs/pixi.js/issues/2369

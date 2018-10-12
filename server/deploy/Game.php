@@ -55,6 +55,7 @@ class Game extends MY_Controller{
                 $this->session->set_userdata('login_state', TRUE);
                 $user_id = $this->session->userdata('uuid');
 				$data = $this->login_model->get_info($user_id);
+				$this->load_login_data();
 	
 		}
 			$this->output
@@ -89,25 +90,24 @@ class Game extends MY_Controller{
         return $bool;
     }
 
-/*    private function load_login_data($client, $data){
-        //全部缓存到session中，便于前端使用
-        $user_id = $data['user_id'];
-        $sess_id = $data['sess_id'];
-        $sess_id_phone = $data['sess_id_phone'];
-        if($client == 'web'){
-            $this->delete_session($sess_id);
-            $data_field = array('sess_id' => "sess_id",'identifier' => "identifier",'token' => "token", "expire" => "expire");
-        }else{
-            $this->delete_session($sess_id_phone);
-            $data_field = array('sess_id' => "sess_id_phone",'identifier' => "identifier_phone",'token' => "token_phone", "expire" => "expire_phone");
-        }
-        unset($sess_id);
-        unset($sess_id_phone);
-        $this->session->set_userdata($data);
-        $this->session->set_userdata('game_state',0);
-        $this->set_login_data($user_id, $data_field);   
-        }
-}*/
+	private function load_login_data(){
+		//全部缓存到session中，便于前端使用
+
+		$user_id = $this->session->userdata('uuid');
+		$data = $this->login_model->get_info($user_id);
+
+		$user_id = $data['user_id'];
+		$sess_id = $data['sess_id'];
+		$sess_id_phone = $data['sess_id_phone'];
+		$this->delete_session($sess_id);
+		$data_field = array('sess_id' => "sess_id",'identifier' => "identifier",'token' => "token", "expire" => "expire");
+		unset($sess_id);
+		unset($sess_id_phone);
+		$this->session->set_userdata($data);
+		$this->session->set_userdata('game_state',0);
+		$this->set_login_data($user_id, $data_field);
+	}
+
     private function set_login_data($user_id,$field){
         //未选中状态下　　没有remember_me字段
         $token = $this->input->post('remember_me');
@@ -132,6 +132,7 @@ class Game extends MY_Controller{
         }
         $this->login_model->update_login_data($user_id,$data);
 	}
+
     public function delete_session($sess_id){
         //更新sess_id,　并删除原session
         if ($sess_id != null) {
@@ -139,27 +140,50 @@ class Game extends MY_Controller{
         }
 	}
 
-	public function get_score(){
-		error_reporting(E_ALL);
-		ini_set('display_errors',1);
-		$this->game_log->get_score();		
+	private function get_username(){
+		$state_login =  $this->session->userdata('login_state');
+		$self_name = $this->session->userdata('username');
+		if($state_login){
+			return $self_name;
+		}else{
+			echo '{"err":"login"}';
+			die();
+		}
 	}
 
+	public function get_user(){
+		$u = $this->get_username();
+		echo '{"name":"'.$u.'"}';
+	}
+
+	public function get_score(){
+		// error_reporting(E_ALL);
+		// ini_set('display_errors',1);
+		$this->game_log->get_score();		
+	}
 	public function upload_score(){
-		 $this->game_log->upload_score();
-			
+		 $this->game_log->upload_score($this->get_username());
 	}
-	public function break_record(){
-		$this->game_log->break_record();
-	}
+	// // public function break_record(){
+	// // 	$this->game_log->break_record();
+	// // }
 	public function update_user_info(){
-		$this->game_log->update_user_info();
+		$this->game_log->update_user_info($this->get_username());
 	}
 	public function get_user_info(){
-		$this->game_log->get_user_info();
+		$this->game_log->get_user_info($this->get_username());
+	}
+	public function get_stock(){
+		$this->game_log->get_stock();
+	}
+	public function get_user_match(){
+		$this->game_log->get_user_match($this->get_username());
+	}
+	public function get_user_submatch(){
+		$this->game_log->get_user_submatch($this->get_username());
+	}
+	public function create_submatch(){
+		$this->game_log->create_submatch();
 	}
 	
-	public function update_level(){
-		$this->game_log->update_level();
-	}
 }

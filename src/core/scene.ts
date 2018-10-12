@@ -5,6 +5,7 @@ export class Scene extends PIXI.Container {
     // container;
     sceneName: string;
     maskPanel: PIXI.Graphics;
+    updates = [];
     private startViewTime: number;
     constructor() {
         super();
@@ -38,6 +39,7 @@ export class Scene extends PIXI.Container {
                 'Time': stayTime
             }
         });
+        this.updates = [];
     }
 
     addMask(color = 0) {

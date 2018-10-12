@@ -1,11 +1,6 @@
-import { Candle, CandleOption } from "./candle";
-import { RectButton } from "../core/component/rectButton";
-import { Label } from "../core/component/label";
-// import * as director from "../core/director";
-import { MainScene, START_CASH } from "../mainScene";
+import { Candle } from "./candle";
+import { MainScene } from "../mainScene";
 import { CandleTrack } from "./candleTrack";
-import * as math from "../utils/math";
-import { num } from "../utils/xml";
 
 export class SelfTrack extends CandleTrack {
     prev = 0;
@@ -44,7 +39,7 @@ export class SelfTrack extends CandleTrack {
 
     nextData() {
         this.dataIndex++;
-        let percent = (this.mainScene.totalAmount / START_CASH) * 100 - 100;
+        let percent = this.mainScene.profit;
         this.open = this.close = percent;
         this.datas.push(percent);
         this.min = Math.min(this.open, this.min);
@@ -57,7 +52,7 @@ export class SelfTrack extends CandleTrack {
             this.color = Candle.decColor;
         this.prev = this.open;
         let hmax = this.open, hmin = this.open;
-        for (let i = 1; i < this.numHistoryPoints; i++) {
+        for (let i = 0; i < this.numHistoryPoints + 1; i++) {
             let n = this.datas[this.dataIndex - i];
             if (hmax < n) hmax = n;
             if (hmin > n) hmin = n;
@@ -68,7 +63,7 @@ export class SelfTrack extends CandleTrack {
 
     renderLine() {
         let pts = []
-        for (let i = this.numHistoryPoints - 1; i >= 0; i--) {
+        for (let i = this.numHistoryPoints; i >= 0; i--) {
             pts.push(this.datas[this.dataIndex - i]);
         }
         this.mainScene.sideAxis.renderPoints(pts, this.lineColor);

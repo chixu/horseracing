@@ -1,9 +1,10 @@
-import { MainScene } from "../mainScene";
+import { MainScene, GameMode } from "../mainScene";
 import * as math from "../utils/math";
 import * as array from "../utils/array";
 import * as http from "../utils/http";
 import * as director from "../core/director";
 import { CandleTrack } from "./candleTrack";
+import { Request } from "../constant";
 
 export class DataAdapter {
     // mainScene :MainScene;
@@ -15,6 +16,33 @@ export class DataAdapter {
 
     getData() {
 
+    }
+}
+
+export class ServerDataAdapter extends DataAdapter {
+
+    getData() {
+        let o = this.mainScene.options;
+        if (this.mainScene.gameMode == GameMode.Match) {
+            return director.request.get(Request.gameStockInfo, {
+                code: o.code,
+                date: o.enddate,
+                days: o.days
+            }, true);
+        } else {
+            return director.request.post('get_stock', {
+                count: this.mainScene.numTracks
+            }).then(res => {
+                if (res.err)
+                    console.log(res.err);
+                else
+                    return director.request.get(Request.gameStockInfo, {
+                        code: res.data.code,
+                        date: res.data.date,
+                        days: o.days
+                    }, true);
+            });
+        }
     }
 }
 

@@ -4,7 +4,7 @@ import * as director from "./core/director";
 import { Command } from "./core/socket";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
-import { LocalDataAdapter } from "./component/dataAdapter";
+import { ServerDataAdapter } from "./component/dataAdapter";
 import * as lStorage from "./component/LocalStorage";
 import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/rectButton";
@@ -17,12 +17,11 @@ import * as array from "./utils/array";
 import { SelfTrack } from "./component/selfTrack";
 import { SinglePlayerScene } from "./singlePlayerScene";
 import { RecordScene } from "./recordScene";
-import { Graphics } from "pixi.js";
 // import $ from "jquery";
 export const START_CASH = 100000;
 
 export const enum GameMode {
-    Multi, Auto, Normal
+    Multi, Auto, Normal, Match
 }
 
 export class MainScene extends Scene {
@@ -40,7 +39,7 @@ export class MainScene extends Scene {
     // skipButton: RectButton;
     round: number;
     totalRound: number;
-    readonly numHistoryPoints: number = 30;
+    readonly numHistoryPoints: number = 20;
     axis: Axis;
     sideAxis: Axis;
     winPanel: PIXI.Container;
@@ -49,10 +48,11 @@ export class MainScene extends Scene {
     //inited: boolean = false;
     static renderHorse = true;
     autoPlay: number;
-    history: { i: number, time: any }[];
+    history: { i: number, time: any, profit: number, code: string }[];
     options;
     startTime;
     loadingPanel: PIXI.Container;
+    playerRank: number;
 
     constructor(options) {
         super();
@@ -62,6 +62,7 @@ export class MainScene extends Scene {
         this.numTracks = options.n || 3;
         // this.numTracks = 6;
         this.totalRound = options.r || 25;
+        this.options.days = this.numHistoryPoints + this.totalRound + 1;
         this.scoreLabel = new Label('', { align: 'left', fontSize: 25 });
         this.scoreLabel.position.set(5, 5);
         this.addChild(this.scoreLabel);
@@ -91,7 +92,6 @@ export class MainScene extends Scene {
         showButton.text = "显示按钮";
         showButton.position.set(director.config.width - 155, 20)
         showButton.clickHandler = () => {
-            console.log(showButton.text);
             if (showButton.text == "显示按钮") {
                 showButton.text = "隐藏按钮";
                 for (let i = 0; i < this.tracks.length; i++)
@@ -137,7 +137,7 @@ export class MainScene extends Scene {
     }
 
     getData() {
-        let dataAdapter = new LocalDataAdapter(this);
+        let dataAdapter = new ServerDataAdapter(this);
         this.startLoading();
         return dataAdapter.getData().then(datas => {
             // console.log(datas);
@@ -219,6 +219,7 @@ export class MainScene extends Scene {
     }
 
     gameStart() {
+        // console.log('gamestart');
         this.next();
         this.startTime = new Date();
         if (this.gameMode == GameMode.Auto)
@@ -236,7 +237,6 @@ export class MainScene extends Scene {
             hmax = Math.max(hmax, track.historyMax);
             hmin = Math.min(hmin, track.historyMin);
         }
-        // console.log(hmin, hmax);
         this.axis.render(min, max);
         this.sideAxis.render(hmin, hmax);
         this.renderFrontAxis();
@@ -248,6 +248,16 @@ export class MainScene extends Scene {
     next() {
         this.round++;
         this.renderNext();
+        if (this.focusTrack) {
+            let time: any = new Date();
+            this.history.push({
+                i: this.focusTrack.index,
+                time: time - this.startTime,
+                profit: math.toFixedNumber(this.profit),
+                code: this.focusTrack.stockCode
+            });
+            // console.log(this.history);
+        }
         if (this.round == this.totalRound) {
             clearInterval(this.autoPlay);
             this.gameOver();
@@ -299,10 +309,6 @@ export class MainScene extends Scene {
         exit.position.set(director.config.width / 2, 850);
         this.winPanel.addChild(exit);
 
-    }
-
-    renderGameOverUi2(playerRank) {
-
         let rank = new RectButton(180, 60, 0x00ff00);
         rank.position.set(director.config.width / 2, 670);
         rank.text = director.user.isLogin ? "龙虎榜" : "登录";
@@ -314,7 +320,10 @@ export class MainScene extends Scene {
             }
         }
         this.winPanel.addChild(rank);
+    }
 
+    renderGameOverUi2() {
+        let playerRank = this.playerRank;
         let l1;
         if (playerRank == 1)
             l1 = new Label("恭喜你", { fontSize: 50, fill: 0xffd700 });
@@ -323,9 +332,8 @@ export class MainScene extends Scene {
         this.winPanel.addChild(l1);
         l1.position.set(director.config.width / 2, 50);
 
-
-        if (playerRank == 1){
-            let l2 = new Label("赶快"+(director.user.isLogin?"":"登录海知账号")+"去龙虎榜看下你的排名吧!", { fontSize: 25, fill: 0xffd700 });
+        if (playerRank == 1) {
+            let l2 = new Label("赶快" + (director.user.isLogin ? "" : "登录海知账号") + "去龙虎榜看下你的排名吧!", { fontSize: 25, fill: 0xffd700 });
             this.winPanel.addChild(l2);
             l2.position.set(director.config.width / 2, 250);
         }
@@ -351,81 +359,21 @@ export class MainScene extends Scene {
         // console.log('percent', percent);
         //let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n击败了${(1 / (1 + Math.pow(2, -30 * percent)) * 100).toFixed(2)}%的玩家`, { fontSize: 40 });
         this.renderGameOverUi();
-        let rank = '';
-        let playerRank;
-        let alltracks = [];
-        for (let i = 0; i < this.tracks.length; i++) {
-            alltracks.push(this.tracks[this.tracks.length - 1 - i]);
-        }
-        let sortedTracks = array.sortDescApprox(alltracks, 'profit');
-        for (let i = 0; i < sortedTracks.length; i++) {
-            // console.log(sortedTracks[i].profit);
-            let t: CandleTrack = sortedTracks[i]
-            let name = t.stockName || '玩家';
-            let d = '';
-            if (t.stockName) {
-                d = '(' + date.dateToYYmmdd(t.startDate) + '-' + date.dateToYYmmdd(t.endDate) + ')';
-            } else {
-                playerRank = i + 1;
-            }
-            rank += (i + 1) + '. ' + name + d + '  ' + t.profit.toFixed(2) + '%\n';
-        }
+        // let rank = '';
+        // let playerRank;
+
         // console.log(rank);
-        let l3 = new Label(rank, { fontSize: 28 });
+        let l3 = new Label(this.getPlayerRank(), { fontSize: 28 });
         this.winPanel.addChild(l3);
         l3.position.set(director.config.width / 2, 410);
 
-        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n赛场排名第${playerRank}`, { fontSize: 40, fill: 0xffffff });
+        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n赛场排名第${this.playerRank}`, { fontSize: 40, fill: 0xffffff });
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
 
         //upload score
-        let t: CandleTrack = this.tracks[1];
-        let tracks = [];
-        for (let i = 1; i < this.numTracks + 1; i++)
-            tracks.push(this.tracks[i].stockName);
-        let resData = {
-            numTrack: this.numTracks,
-            startDate: date.dateToYYmmdd(t.startDate),
-            endDate: date.dateToYYmmdd(t.endDate),
-            tracks: tracks,
-            history: this.history,
-            round: this.totalRound,
-            auto: this.gameMode == GameMode.Auto,
-            profit: this.profit,
-            rank: playerRank,
-        };
-        let postData = {
-            user: director.user.isLogin ? director.user.name : "",
-            level: this.numTracks,
-            value: this.profit,
-            data: JSON.stringify(resData),
-            rank: playerRank
-        }
-        director.tracker.event({
-            cat: 'game',
-            action: 'over',
-            label: 'score',
-            value: this.profit
-        });
-        director.tracker.event({
-            cat: 'game',
-            action: 'over',
-            label: 'time',
-            value: this.gameTime
-        });
-        director.tracker.event({
-            name: 'Game Over',
-            properties: {
-                'Level': this.numTracks,
-                'User': director.user.isLogin ? director.user.name : ""
-            },
-            measurements: {
-                'Score': this.profit,
-                'Time': this.gameTime,
-                'Rank': playerRank
-            }
-        });
+
+        let postData = this.getGamePostData();
         if (director.user.isLogin) {
             director.request.post('upload_score', postData);
         } else {
@@ -443,7 +391,85 @@ export class MainScene extends Scene {
         //         l4.position.set(director.config.width / 2, 270);
         //     }
         // })
-        this.renderGameOverUi2(playerRank);
+        this.gameOverTracker();
+        this.renderGameOverUi2();
+    }
+
+    getPlayerRank() {
+        let rankTxt = "";
+        let alltracks = [];
+        for (let i = 0; i < this.tracks.length; i++) {
+            alltracks.push(this.tracks[this.tracks.length - 1 - i]);
+        }
+        let sortedTracks = array.sortDescApprox(alltracks, 'profit');
+        for (let i = 0; i < sortedTracks.length; i++) {
+            // console.log(sortedTracks[i].profit);
+            let t: CandleTrack = sortedTracks[i]
+            let name = t.stockName || director.user.name || '玩家';
+            let d = '';
+            if (t.stockName) {
+                d = '(' + date.dateToYYmmdd(t.startDate) + '-' + date.dateToYYmmdd(t.endDate) + ')';
+            } else {
+                this.playerRank = i + 1;
+            }
+            rankTxt += (i + 1) + '. ' + name + d + '  ' + t.profit.toFixed(2) + '%\n';
+        }
+        return rankTxt;
+    }
+
+    getGamePostData() {
+        let playerRank = this.playerRank;
+        let t: CandleTrack = this.tracks[1];
+        let tracks = [];
+        for (let i = 1; i < this.numTracks + 1; i++)
+            tracks.push(this.tracks[i].stockCode);
+        let resData = {
+            numTrack: this.numTracks,
+            startDate: date.dateToYYmmdd(t.startDate),
+            endDate: date.dateToYYmmdd(t.endDate),
+            tracks: tracks,
+            history: this.history,
+            round: this.totalRound,
+            auto: this.gameMode == GameMode.Auto,
+            profit: math.toFixedNumber(this.profit),
+            rank: playerRank,
+        };
+        let postData = {
+            user: director.user.isLogin ? director.user.name : "",
+            level: this.numTracks,
+            value: math.toFixedNumber(this.profit),
+            data: JSON.stringify(resData),
+            rank: playerRank
+        }
+        return postData;
+    }
+
+    gameOverTracker() {
+        director.tracker.event({
+            cat: 'game',
+            action: 'over',
+            label: 'score',
+            value: this.profit
+        });
+        director.tracker.event({
+            cat: 'game',
+            action: 'over',
+            label: 'time',
+            value: this.gameTime
+        });
+        director.tracker.event({
+            name: 'Game Over',
+            properties: {
+                'Level': this.numTracks,
+                'Mode': this.gameMode,
+                'User': director.user.isLogin ? director.user.name : ""
+            },
+            measurements: {
+                'Score': this.profit,
+                'Time': this.gameTime,
+                'Rank': this.playerRank
+            }
+        });
     }
 
     get gameTime(): number {
@@ -451,7 +477,8 @@ export class MainScene extends Scene {
     }
 
     get profit(): number {
-        return this.tracks[0].profit;
+        // return this.tracks[0].profit;
+        return (this.totalAmount / START_CASH) * 100 - 100;
     }
 
     sell() {
@@ -484,15 +511,11 @@ export class MainScene extends Scene {
         this.enabled = false;
         this.unfocus();
         track.focus = true;
+        this.focusTrack = track;
         this.sell();
         this.buy(track);
         this.renderFrontAxis();
-        let time: any = new Date();
-        this.history.push({
-            i: track.index,
-            time: time - this.startTime
-        });
-        if (this.gameMode == GameMode.Normal)
+        if (this.gameMode == GameMode.Normal || this.gameMode == GameMode.Match)
             this.next();
     }
 
