@@ -158,7 +158,7 @@ class GameApi{
 
     public function get_stock_enddate(){
         $date = new DateTime(date('Y-m-d'));
-        $date->sub(new DateInterval('P'.rand(10,900).'D'));
+        $date->sub(new DateInterval('P'.rand(10,600).'D'));
         return $date->format('Y-m-d');
     }
 
@@ -244,6 +244,7 @@ class GameApi{
         $data = $this->post_data();
         // $user = $data['user'];
         $value = $data['value'];
+        $valueminusindex = $data['valueminusindex'];
         $level = $data['level'];
         $history = $data['data'];
         $rank = $data['rank'];
@@ -262,6 +263,7 @@ class GameApi{
         $insert_data = array(
             "username"=>$user,
             "value"=>strval($value),
+            "valueminusindex"=>strval($valueminusindex),
             "level"=>strval($level),
             "date"=>$date,
             "data"=>$history,
@@ -286,7 +288,7 @@ class GameApi{
     }
 
     public function insert($db, $data){
-        echo json_encode($data);
+        // echo json_encode($data);
         if(method_exists($this->db, 'insert')){
             $this->db->insert($this->dt . "." . $db, $data);
             return $this->db->insert_id();
@@ -294,7 +296,7 @@ class GameApi{
             $cols = "";
             $values = "";
             foreach($data as $k=>$v){
-                echo $v;
+                // echo $v;
                 $cols = $cols.",".$k;
                 if(is_string($v)){
                     $values =$values.",'".$v."'";

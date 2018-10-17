@@ -56,10 +56,15 @@ export class CandleTrack extends PIXI.Container {
         this.mainScene = mainScene;
         this.numHistoryPoints = mainScene.numHistoryPoints;
         this.index = index;
+        this.initUI(index);
+        // this.showButton(false);
+    }
+
+    initUI(index) {
         this.lineColor = this.btnColor = CandleTrack.colors[index];
         this.candleContainer = new PIXI.Container();
         this.addChild(this.candleContainer);
-        let buttonW = [120, 120, 120, 96, 80, 68][mainScene.numTracks - 1];
+        let buttonW = [120, 120, 120, 96, 80, 68][this.mainScene.numTracks - 1];
         // let clickedArea = graphic.rectangle(buttonW, 420, 0xff0000);
         let clickedArea = new RectButton(buttonW, 420, 0xff0000);
         clickedArea.alpha = 0;
@@ -78,7 +83,6 @@ export class CandleTrack extends PIXI.Container {
 
         this.infoPanel = new PIXI.Container();
         this.addChild(this.infoPanel);
-        // this.showButton(false);
     }
 
     get profit(): number {
@@ -92,7 +96,8 @@ export class CandleTrack extends PIXI.Container {
         this.close = undefined;
         this.dataIndex = this.numHistoryPoints - 1;
         this.focus = false;
-        this.infoPanel.removeChildren();
+        if (this.infoPanel)
+            this.infoPanel.removeChildren();
     }
 
     setDatas(d?: any, name?: string) {
@@ -102,14 +107,16 @@ export class CandleTrack extends PIXI.Container {
             this.datas.push([k].concat(array.toNumbers(d.data[k])));
         }
         // console.log(this.datas);
-        let info;
-        let inc = (this.fullData.NetProfitRate * 100).toFixed(2);
-        if (this.mainScene.numTracks > 4)
-            info = new Label(`盈${this.fullData.pe}\n净${this.fullData.pb}\n增${inc}%\n`, { fontSize: 18, align: 'left' });
-        else
-            info = new Label(`市盈${this.fullData.pe}\n市净${this.fullData.pb}\n增长${inc}%\n`, { fontSize: 20, align: 'left' });
-        this.infoPanel.addChild(info);
-        info.position.set(-this.button.width / 2, 220);
+        if (this.infoPanel) {
+            let info;
+            let inc = (this.fullData.NetProfitRate * 100).toFixed(2);
+            if (this.mainScene.numTracks > 4)
+                info = new Label(`盈${this.fullData.pe}\n净${this.fullData.pb}\n增${inc}%\n`, { fontSize: 18, align: 'left' });
+            else
+                info = new Label(`市盈${this.fullData.pe}\n市净${this.fullData.pb}\n增长${inc}%\n`, { fontSize: 20, align: 'left' });
+            this.infoPanel.addChild(info);
+            info.position.set(-this.button.width / 2, 220);
+        }
         // let numPts = this.numHistoryPoints + this.mainScene.totalRound;
         // if (CandleTrack.origDataIndex == undefined)
         //     CandleTrack.origDataIndex = math.randomInteger(1, d.length - numPts);
@@ -166,7 +173,7 @@ export class CandleTrack extends PIXI.Container {
         //初始值是前一天收盘价
         if (this.open == undefined) {
             this.open = d[CLOSE_IDX];
-            this.startDate = new Date(d[DATE_IDX].split(" ")[0]);
+            this.startDate = this.getDate();
         }
         // let min = this.getRelativePercent(d[4]);
         // if (this.min == undefined)
@@ -179,8 +186,8 @@ export class CandleTrack extends PIXI.Container {
         // else
         //     this.max = Math.max(max, this.max);
         this.close = this.getCloseValue(this.dataIndex);
-        this.endDate = new Date(d[DATE_IDX].split(" ")[0]);
-        // console.log('nextData', this.index, this.min, this.max);
+        this.endDate = this.getDate();
+        // console.log('nextData', this.stockCode, this.startDate, this.endDate, this.open, this.close, this.profit);
         // this.candle.setPosition(1);
         let hmax = this.close, hmin = this.close;
         for (let i = 0; i < this.numHistoryPoints + 1; i++) {
@@ -199,6 +206,10 @@ export class CandleTrack extends PIXI.Container {
         return v > 0 ? v : this.datas[idx][OPEN_IDX];
     }
 
+    getDate() {
+        return new Date(this.datas[this.dataIndex + 1][DATE_IDX].split(" ")[0])
+    }
+
     getRelativePercent(v) {
         return v / this.open * 100 - 100;
     }
@@ -208,7 +219,6 @@ export class CandleTrack extends PIXI.Container {
         for (let i = this.numHistoryPoints; i >= 0; i--) {
             pts.push(this.getRelativePercent(this.getCloseValue(this.dataIndex - i)));
         }
-        // console.log(pts);
         this.mainScene.sideAxis.renderPoints(pts, this.lineColor);
     }
 
@@ -256,12 +266,15 @@ export class CandleTrack extends PIXI.Container {
 
     set enabled(b: boolean) {
         this._enabled = b;
-        this.clickedArea.visible = b;
+        if (this.clickedArea)
+            this.clickedArea.visible = b;
     }
 
     showButton(b: boolean = true) {
-        this.button.visible = b;
-        this.infoPanel.visible = !b;
+        if (this.button)
+            this.button.visible = b;
+        if (this.infoPanel)
+            this.infoPanel.visible = !b;
     }
 
 

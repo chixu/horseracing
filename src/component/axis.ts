@@ -75,7 +75,7 @@ export class Axis extends PIXI.Container {
     renderPoints(pts: number[], color: number, lineWidth = 2) {
         let l = new PIXI.Graphics();
         l.lineStyle(lineWidth, color);
-        let gap = this.option.width / pts.length * 0.85;
+        let gap = this.option.width / (pts.length - 1) * 0.9;
         l.moveTo(0, -this.heightRatio * pts[0]);
         for (let i = 1; i < pts.length; i++) {
             l.lineTo(i * gap, -this.heightRatio * pts[i]);

@@ -17,6 +17,7 @@ import * as array from "./utils/array";
 import { SelfTrack } from "./component/selfTrack";
 import { SinglePlayerScene } from "./singlePlayerScene";
 import { RecordScene } from "./recordScene";
+import { IndexTrack } from "./component/indexTrack";
 // import $ from "jquery";
 export const START_CASH = 100000;
 
@@ -53,6 +54,7 @@ export class MainScene extends Scene {
     startTime;
     loadingPanel: PIXI.Container;
     playerRank: number;
+    showIndex: boolean = true;
 
     constructor(options) {
         super();
@@ -133,6 +135,10 @@ export class MainScene extends Scene {
             ct.position.set(right + this.trackGap * i, 560);
             this.addChild(ct);
         }
+        if (this.showIndex) {
+            let ct = new IndexTrack(this, this.numTracks + 1);
+            this.tracks.push(ct);
+        }
         this.init();
     }
 
@@ -144,8 +150,13 @@ export class MainScene extends Scene {
             this.tracks[0].setDatas();
             let i = 0;
             for (let k in datas) {
-                i++
-                this.tracks[i].setDatas(datas[k], k);
+                //如果是指数数据
+                if (k[0] == 'i') {
+                    this.tracks[this.tracks.length - 1].setDatas(datas[k], k);
+                } else {
+                    i++
+                    this.tracks[i].setDatas(datas[k], k);
+                }
             }
             this.stopLoading();
             this.dataReceived();
@@ -432,12 +443,14 @@ export class MainScene extends Scene {
             round: this.totalRound,
             auto: this.gameMode == GameMode.Auto,
             profit: math.toFixedNumber(this.profit),
+            profitMinusIndex: math.toFixedNumber(this.profitMinusIndex),
             rank: playerRank,
         };
         let postData = {
             user: director.user.isLogin ? director.user.name : "",
             level: this.numTracks,
             value: math.toFixedNumber(this.profit),
+            valueminusindex: math.toFixedNumber(this.profitMinusIndex),
             data: JSON.stringify(resData),
             rank: playerRank
         }
@@ -465,7 +478,8 @@ export class MainScene extends Scene {
                 'User': director.user.isLogin ? director.user.name : ""
             },
             measurements: {
-                'Score': this.profit,
+                'Profit': this.profit,
+                'ProfitMinusIndex': this.profitMinusIndex,
                 'Time': this.gameTime,
                 'Rank': this.playerRank
             }
@@ -479,6 +493,11 @@ export class MainScene extends Scene {
     get profit(): number {
         // return this.tracks[0].profit;
         return (this.totalAmount / START_CASH) * 100 - 100;
+    }
+
+    get profitMinusIndex(): number {
+        // return this.tracks[0].profit;
+        return this.profit - this.tracks[this.tracks.length - 1].profit;
     }
 
     sell() {

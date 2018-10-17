@@ -25,7 +25,7 @@ export class ServerDataAdapter extends DataAdapter {
         let o = this.mainScene.options;
         if (this.mainScene.gameMode == GameMode.Match) {
             return director.request.get(Request.gameStockInfo, {
-                code: o.code,
+                code: o.code + (this.mainScene.showIndex ? "_i000001" : ""),
                 date: o.enddate,
                 days: o.days
             }, true);
@@ -37,7 +37,7 @@ export class ServerDataAdapter extends DataAdapter {
                     console.log(res.err);
                 else
                     return director.request.get(Request.gameStockInfo, {
-                        code: res.data.code,
+                        code: res.data.code + (this.mainScene.showIndex ? "_i000001" : ""),
                         date: res.data.date,
                         days: o.days
                     }, true);
