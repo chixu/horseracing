@@ -174,7 +174,8 @@ class GameApi{
         $data = $this->post_data();
         $sql = sprintf("SELECT t1.title as title, t2.status as status, start_date>now() as start, end_date<now() as end, t3.id as id FROM %s.dksm_match as t1
         left join %s.dksm_user_match as t2 on matchid = t1.id 
-        left join %s.ht_user_groups as t3 on t1.id = t3.id where username='%s'"
+        left join %s.ht_user_groups as t3 on t1.id = t3.id where username='%s'
+        order by status, start, end"
             ,$this->dt,$this->dt,$this->dt,$user);
         $result = $this->db->query($sql);
 		$array = $this->get_result($result);
@@ -186,29 +187,51 @@ class GameApi{
         $data = $this->post_data();
         // $user = $data['user'];
         $match = $data['match'];
-        $sql = sprintf("SELECT * FROM %s.dksm_submatch
-        where matchid = %s and id not in (select submatchid from %s.dksm_user_submatch where username = '%s')",
-        $this->dt,$match,$this->dt,$user);
+        $sql = sprintf("SELECT info,count FROM %s.dksm_match where id='%s'",$this->dt,$match);
         $result = $this->db->query($sql);
-        $array = $this->get_result($result);
-        if(count($array) == 0){
-            $this->sendData(array());
-        }else{
-            $index = rand(0,count($array) - 1);
-            $data = $array[$index];
-            $sql = sprintf("INSERT INTO %s.dksm_user_submatch (username, submatchid)
-            VALUES ('%s', %s)",
-            $this->dt, $user, $data['id']);
-            $this->db->query($sql);
-            //最后一个submatch
-            if(count($array) == 1){
-                $sql = sprintf("UPDATE %s.dksm_user_match SET status=%s where matchid=%s and username='%s'",
-                $this->dt, $this->match_status_done, $match, $user);
-                // echo($sql);
-                $this->db->query($sql);
-                $data['last'] = 1;
+		$array = $this->get_result($result);
+        if (count($array) > 0) {
+            $matchinfo = explode(',',$array[0]['info']);
+            $matchcount = strval($array[0]['count']);
+            $sql = sprintf("SELECT count(*) as count FROM %s.dksm_user_submatch where username='%s' and 
+            submatchid in (select id from %s.dksm_submatch where matchid = %s)",$this->dt,$user,$this->dt,$match);
+            $result = $this->db->query($sql);
+            $array = $this->get_result($result);
+            $subcount = strval($array[0]['count']);
+            if($subcount == $matchcount){
+                $this->sendData(array());
+            }else{
+                $index = 0;
+                for($i=0; $i<count($matchinfo); $i++){
+                    $matchinfo2 = explode(':',$matchinfo[$i]);
+                    $level = $matchinfo2[0];
+                    $levelcount = $matchinfo2[1];
+                    $index = $index+$levelcount;
+                    if($subcount<$index){
+                        $sql = sprintf("SELECT * FROM %s.dksm_submatch
+                        where matchid = %s and level = %s and id not in (select submatchid from %s.dksm_user_submatch where username = '%s')",
+                        $this->dt,$match,$level,$this->dt,$user);
+                        $result = $this->db->query($sql);
+                        $array = $this->get_result($result);
+                        $index = rand(0,count($array) - 1);
+                        $data = $array[$index];
+                        $sql = sprintf("INSERT INTO %s.dksm_user_submatch (username, submatchid) VALUES ('%s', %s)",
+                        $this->dt, $user, $data['id']);
+                        $this->db->query($sql);
+                        //最后一个submatch
+                        if($matchcount-$subcount == 1){
+                            $sql = sprintf("UPDATE %s.dksm_user_match SET status=%s where matchid=%s and username='%s'",
+                            $this->dt, $this->match_status_done, $match, $user);
+                            $this->db->query($sql);
+                            $data['last'] = 1;
+                        }
+                        $this->sendData($data);
+                        return;
+                    }
+                }
             }
-            $this->sendData($data);
+        }else{
+            $this->error("nomatch");
         }
     }
 
