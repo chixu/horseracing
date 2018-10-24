@@ -36,6 +36,7 @@ export class MatchListScene extends Scene {
     lastButtonY = 50;
     buttonGap = 100;
     confirmPanel: PIXI.Container;
+    rankConfirmPanel: PIXI.Container;
     confirmMatchTitle: Label;
     matchData;
     shownIndex;
@@ -53,7 +54,7 @@ export class MatchListScene extends Scene {
         super.enter();
         // this.addMatch({ title: http.getQueryString('title') });
         director.request.post('get_user_match', { user: director.user.name }).then(res => {
-            console.log(res);
+            // console.log(res);
             if (res.err) {
                 console.log(res.err);
             } else {
@@ -95,11 +96,11 @@ export class MatchListScene extends Scene {
             }
         }
         let b2 = new RectButton(220, 65, 0xff0000);
-        b2.text = '退出';
+        b2.text = '退 出';
         b2.clickHandler = () => {
             director.sceneManager.replace(new SelectionScene());
         };
-        b2.position.set(director.config.width / 2, 800);
+        b2.position.set(director.config.width / 2, 810);
         this.addChild(b2);
     }
 
@@ -109,8 +110,8 @@ export class MatchListScene extends Scene {
         let b = new RectButton(500, 80, status == MatchStatusName.progress ? 0x00ff00 : 0xff0000);
         b.shortClick = 300;
         // b.text = item.title;
-        if (status == MatchStatusName.progress)
-            b.clickHandler = () => this.showConfirmScene(b['index']);
+        // if (status == MatchStatusName.progress)
+        b.clickHandler = () => this.showConfirmScene(b['index']);
         b.position.set(director.config.width / 2 - 30, this.lastButtonY);
         let title: string = item.title;
         if (title.length > 18)
@@ -133,35 +134,70 @@ export class MatchListScene extends Scene {
         return t;
     }
 
+    showRankConfirmScene(index) {
+        this.rankConfirmPanel = new PIXI.Container();
+        let bg = graphic.rectangle(director.config.width, director.config.height);
+        bg.interactive = true;
+        bg.alpha = 0.8;
+        this.rankConfirmPanel.addChild(bg);
+
+        let l = new Label("你将退出游戏然后跳转到排行榜", { fontSize: 30 });
+        this.rankConfirmPanel.addChild(l);
+        l.position.set(director.config.width / 2, 300);
+
+        let b = new RectButton(220, 65, 0x00ff00);
+        b.text = '确 定';
+        b.clickHandler = () => {
+            window.top.location.href = window.location.origin + "/hero_list/school_simu_competition_list/" + this.matchData[index].id;
+        };
+        b.position.set(director.config.width / 2, 600);
+        this.rankConfirmPanel.addChild(b);
+        let b2 = new RectButton(220, 65, 0xff0000);
+        b2.text = '取 消';
+        b2.clickHandler = () => {
+            this.removeChild(this.rankConfirmPanel);
+            this.rankConfirmPanel = null;
+        };
+        b2.position.set(director.config.width / 2, 700);
+        this.rankConfirmPanel.addChild(b2);
+
+        this.addChild(this.rankConfirmPanel);
+    }
+
     showConfirmScene(index) {
         let data = this.matchData[index];
-        if (this.getStatus(data) != MatchStatusName.progress) return;
-        if (this.confirmPanel) {
-            this.confirmMatchTitle.value = data.title;
-        } else {
-            this.confirmPanel = new PIXI.Container();
-            let bg = graphic.rectangle(director.config.width, director.config.height);
-            bg.alpha = 0.9;
-            this.confirmPanel.addChild(bg);
+        let progress = this.getStatus(data) == MatchStatusName.progress;
+        // if (this.getStatus(data) != MatchStatusName.progress) return;
+        // if (this.confirmPanel) {
+        //     this.confirmMatchTitle.value = data.title;
+        // } else {
+        this.confirmPanel = new PIXI.Container();
+        let bg = graphic.rectangle(director.config.width, director.config.height);
+        bg.alpha = 0.8;
+        bg.interactive = true;
+        this.confirmPanel.addChild(bg);
 
-            let l = new Label("你将进入的比赛是", { fontSize: 30 });
+        if (progress) {
+            let l = new Label("你将进入的比赛是", { fontSize: 28 });
             this.confirmPanel.addChild(l);
             l.position.set(director.config.width / 2, 300);
+        }
 
-            let l2 = new Label(data.title, { fontSize: 40 });
-            this.confirmPanel.addChild(l2);
-            l2.position.set(director.config.width / 2, 380);
+        let l2 = new Label(data.title, { fontSize: 40 });
+        this.confirmPanel.addChild(l2);
+        l2.position.set(director.config.width / 2, 380);
 
-            let l3 = new Label("请不要中途退出比赛");
-            this.confirmPanel.addChild(l3);
-            l3.position.set(director.config.width / 2, 460);
-            this.confirmMatchTitle = l2;
+        let l3 = new Label(progress ? "请不要中途退出比赛" : "已结束");
+        this.confirmPanel.addChild(l3);
+        l3.position.set(director.config.width / 2, 460);
+        this.confirmMatchTitle = l2;
 
+        if (progress) {
             let b = new RectButton(220, 65, 0x00ff00);
             b.text = '进入比赛';
             b.clickHandler = () => {
                 this.addMask();
-                console.log(director.user.name, data.id);
+                // console.log(director.user.name, data.id);
                 return director.request.post('get_user_submatch', {
                     user: director.user.name,
                     match: data.id
@@ -182,14 +218,24 @@ export class MatchListScene extends Scene {
             };
             b.position.set(director.config.width / 2, 600);
             this.confirmPanel.addChild(b);
-            let b2 = new RectButton(220, 65, 0xff0000);
-            b2.text = '取 消';
-            b2.clickHandler = () => {
-                this.removeChild(this.confirmPanel);
-            };
-            b2.position.set(director.config.width / 2, 700);
-            this.confirmPanel.addChild(b2);
         }
+        let b1 = new RectButton(220, 65, 0xff0000);
+        b1.text = '比赛排行';
+        b1.clickHandler = () => {
+            this.showRankConfirmScene(index);
+        };
+        b1.position.set(director.config.width / 2, 690);
+        this.confirmPanel.addChild(b1);
+
+        let b2 = new RectButton(220, 65, 0xff0000);
+        b2.text = '取 消';
+        b2.clickHandler = () => {
+            this.removeChild(this.confirmPanel);
+            this.confirmPanel = null;
+        };
+        b2.position.set(director.config.width / 2, 780);
+        this.confirmPanel.addChild(b2);
+        // }
         this.addChild(this.confirmPanel);
     }
 

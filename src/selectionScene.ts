@@ -18,26 +18,26 @@ export class SelectionScene extends Scene {
         this.addChild(l);
         l.position.set(director.config.width / 2, 150);
 
-        this.addButton("单人游戏", () => {
+        this.addButton("单人训练", () => {
             director.sceneManager.replace(new SinglePlayerScene());
         });
-        this.addButton("多空大赛", () => {
+        this.addButton("多人训练", () => {
+            director.socket.init().then(() =>
+                director.sceneManager.replace(new MultiPlayerScene())
+            );
+        });
+        this.addButton("参加比赛", () => {
             if (director.user.isLogin)
                 director.sceneManager.replace(new MatchListScene());
             else
                 alert("请先登录海知平台");
-        });
-        this.addButton("多人游戏", () => {
-            director.socket.init().then(() =>
-                director.sceneManager.replace(new MultiPlayerScene())
-            );
         });
         if (!director.user.isLogin) {
             this.addButton("登 录", () => {
                 director.user.showLogin(() => director.sceneManager.replace(new SelectionScene()));
             });
         } else {
-            this.addButton("英雄榜", () => {
+            this.addButton("排行榜", () => {
                 director.sceneManager.push(new RecordScene());
             });
         }

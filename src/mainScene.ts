@@ -138,6 +138,9 @@ export class MainScene extends Scene {
         if (this.showIndex) {
             let ct = new IndexTrack(this, this.numTracks + 1);
             this.tracks.push(ct);
+            let l = new Label('一 指数', { fontSize: 18 });
+            l.position.set(520, 420);
+            this.addChild(l);
         }
         this.init();
     }

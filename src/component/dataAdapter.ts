@@ -23,7 +23,7 @@ export class ServerDataAdapter extends DataAdapter {
 
     getData() {
         let o = this.mainScene.options;
-        if (this.mainScene.gameMode == GameMode.Match) {
+        if (this.mainScene.gameMode == GameMode.Match || this.mainScene.gameMode == GameMode.Multi) {
             return director.request.get(Request.gameStockInfo, {
                 code: o.code + (this.mainScene.showIndex ? "_i000001" : ""),
                 date: o.enddate,

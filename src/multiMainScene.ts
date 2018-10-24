@@ -4,7 +4,7 @@ import * as director from "./core/director";
 import { Command } from "./core/socket";
 import { CandleTrack } from "./component/candleTrack";
 import { Axis } from "./component/axis";
-import { LocalDataAdapter } from "./component/dataAdapter";
+import { ServerDataAdapter } from "./component/dataAdapter";
 import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/RectButton";
 import * as http from "./utils/http";
@@ -81,20 +81,20 @@ export class MultiMainScene extends MainScene {
         }, 1000);
     }
 
-    getData() {
-        let dataAdapter = new LocalDataAdapter(this);
-        let prevData = director.socket.prevData;
-        return dataAdapter.getData(prevData.id, prevData.i).then(datas => {
-            console.log(datas);
-            this.tracks[0].setDatas();
-            let i = 0;
-            for (let k in datas) {
-                i++
-                this.tracks[i].setDatas(datas[k], k);
-            }
-            this.dataReceived();
-        });
-    }
+    // getData() {
+    //     let dataAdapter = new LocalDataAdapter(this);
+    //     let prevData = director.socket.prevData;
+    //     return dataAdapter.getData(prevData.id, prevData.i).then(datas => {
+    //         console.log(datas);
+    //         this.tracks[0].setDatas();
+    //         let i = 0;
+    //         for (let k in datas) {
+    //             i++
+    //             this.tracks[i].setDatas(datas[k], k);
+    //         }
+    //         this.dataReceived();
+    //     });
+    // }
 
     enter(args?) {
         director.socket.on(Command.gameReady, (data) => {
@@ -190,7 +190,7 @@ export class MultiMainScene extends MainScene {
         let rank = '';
         let playerRank;
         let allPlayers = [];
-        for (let i = this.tracks.length - 1; i >= 0; i--) {
+        for (let i = this.tracks.length - 1; i > 0; i--) {
             let t: CandleTrack = this.tracks[i];
             let name = t.stockName;
             let d = '(' + date.dateToYYmmdd(t.startDate) + '-' + date.dateToYYmmdd(t.endDate) + ')';
@@ -222,6 +222,8 @@ export class MultiMainScene extends MainScene {
         let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n排名第${playerRank}`, { fontSize: 40 });
         this.winPanel.addChild(l2);
         l2.position.set(director.config.width / 2, 170);
+
+        this.gameOverTracker();
     }
 
     exit() {
