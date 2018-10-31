@@ -79,7 +79,7 @@ export class MatchListScene extends Scene {
             this.addChild(l);
             l.position.set(director.config.width / 2, 300);
 
-            let b = new RectButton(220, 65, 0x00ff00);
+            let b = new RectButton(220, 65, 0x11AA22);
             b.text = '加入比赛';
             b.clickHandler = () => {
                 window.top.location.href = window.location.origin + "/group_competition";
@@ -107,7 +107,7 @@ export class MatchListScene extends Scene {
     addMatch(item, callback?) {
         let status = this.getStatus(item);
 
-        let b = new RectButton(500, 80, status == MatchStatusName.progress ? 0x00ff00 : 0xff0000);
+        let b = new RectButton(500, 80, status == MatchStatusName.progress ? 0x11AA22 : 0xff0000);
         b.shortClick = 300;
         // b.text = item.title;
         // if (status == MatchStatusName.progress)
@@ -145,7 +145,7 @@ export class MatchListScene extends Scene {
         this.rankConfirmPanel.addChild(l);
         l.position.set(director.config.width / 2, 300);
 
-        let b = new RectButton(220, 65, 0x00ff00);
+        let b = new RectButton(220, 65, 0x11AA22);
         b.text = '确 定';
         b.clickHandler = () => {
             window.top.location.href = window.location.origin + "/hero_list/school_simu_competition_list/" + this.matchData[index].id;
@@ -193,7 +193,7 @@ export class MatchListScene extends Scene {
         this.confirmMatchTitle = l2;
 
         if (progress) {
-            let b = new RectButton(220, 65, 0x00ff00);
+            let b = new RectButton(220, 65, 0x11AA22);
             b.text = '进入比赛';
             b.clickHandler = () => {
                 this.addMask();

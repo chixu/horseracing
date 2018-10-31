@@ -106,7 +106,7 @@ export class RoomScene extends Scene {
             }
             // users = ['123412', '123412', '123412', '123412', '123412', '123412', '123412', '123412', '123412'];
             for (let i = 0; i < users.length; i++) {
-                let b = new RectButton(200, 65, 0x00ff00);
+                let b = new RectButton(200, 65, 0x11AA22);
                 b.text = users[i];
                 // b.clickHandler = () => {
                 //     // director.socket.send(Command.createRoom);

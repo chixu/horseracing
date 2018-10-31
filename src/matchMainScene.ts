@@ -33,7 +33,7 @@ export class MatchMainScene extends MainScene {
         rect.alpha = 0.7;
 
         if (!this.options.lastmatch) {
-            let nextBtn = new RectButton(180, 60, 0x00ff00);
+            let nextBtn = new RectButton(180, 60, 0x11AA22);
             nextBtn.text = "下一场";
             nextBtn.position.set(director.config.width / 2, 670);
             nextBtn.clickHandler = () => {

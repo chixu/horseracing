@@ -37,8 +37,8 @@ export class Request {
     // private get domain()
 
     private getUrl(api, data?, stricturl = false) {
-        // let url = director.config.apiDomain + api + (director.config.env == 'dev' ? ".php" : "");
-        let url = director.config.apiDomain + api;
+        let url = director.config.apiDomain + api + (director.config.env == 'dev' ? ".php" : "");
+        // let url = director.config.apiDomain + api;
         if (stricturl)
             url = api;
         if (data) {
@@ -53,7 +53,7 @@ export class Request {
             return url;
     }
 
-    get(api, data={}, stricturl = false) {
+    get(api, data = {}, stricturl = false) {
         // console.log(this.getUrl(api, data));
         return http.get(this.getUrl(api, data, stricturl))
             .then((res) => {
@@ -70,13 +70,13 @@ export class Request {
             });
     }
 
-    post(api, data, enc = true) {
+    post(api, data = {}, enc = true) {
         if (enc) {
             let str = String.fromCharCode(math.randomInteger(48, 122)) + JSON.stringify(data);
             // let str = JSON.stringify(data);
             // console.log(str);
             // console.log(encrypt(str));
-            data = { data: encodeURIComponent(encrypt(str))};
+            data = { data: encodeURIComponent(encrypt(str)) };
         }
         return http.post(this.getUrl(api), data)
             .then((res) => {

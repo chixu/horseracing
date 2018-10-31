@@ -36,7 +36,7 @@ export class MultiMainScene extends MainScene {
         this.owner = d.o == 1;
         this.isReady = false;
         this.countDownNumber = 3;
-        let startButton = new RectButton(200, 60, 0x00ff00);
+        let startButton = new RectButton(200, 60, 0x11AA22);
         startButton.text = "准备开始";
         startButton.position.set(director.config.width / 2, 430);
         startButton.clickHandler = () => {
@@ -153,14 +153,14 @@ export class MultiMainScene extends MainScene {
         rect.alpha = 0.7;
 
         if (this.owner) {
-            let replay = new RectButton(180, 60, 0x00ff00);
+            let replay = new RectButton(180, 60, 0x11AA22);
             replay.text = "重玩";
             replay.position.set(director.config.width / 2, 670);
             replay.clickHandler = () => {
                 director.socket.send(Command.restartGame, 1);
             }
             this.winPanel.addChild(replay);
-            let replay2 = new RectButton(180, 60, 0x00ff00);
+            let replay2 = new RectButton(180, 60, 0x11AA22);
             replay2.text = "换股";
             replay2.position.set(director.config.width / 2, 760);
             replay2.clickHandler = () => {

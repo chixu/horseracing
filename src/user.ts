@@ -14,6 +14,7 @@ let logpinPanel: any = document.getElementsByClassName("login-page")[0];
 export class User {
     _unlockedLevel: number = 1;
     name: string;
+    tutorial: number;
     loginHandler;
 
     constructor() {
@@ -89,6 +90,7 @@ export class User {
         // }
         return promise.then(() => director.request.get('get_user_info').then(d => {
             this._unlockedLevel = parseInt(d.data.level);
+            this.tutorial = d.data.tutorial ? parseInt(d.data.tutorial) : 0;
         }));
     }
 
@@ -107,11 +109,12 @@ export class User {
         // else
         //     this.setName(http.getCookie('username'));
         return director.request.get("get_user").then(res => {
-            if(res.err){
+            if (res.err) {
                 if (!lStorage.has('unlockedLevel'))
-                lStorage.set('unlockedLevel', 1);
+                    lStorage.set('unlockedLevel', 1);
                 this._unlockedLevel = lStorage.getNum('unlockedLevel');
-            }else{
+                this.tutorial = lStorage.getNum('tutorial');
+            } else {
                 this.setName(res.name);
                 return this.loadUserInfo();
             }

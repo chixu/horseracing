@@ -3,6 +3,7 @@ import { Candle } from "./component/candle";
 import * as director from "./core/director";
 import { Command } from "./core/socket";
 import { CandleTrack } from "./component/candleTrack";
+// import { MainSceneHelper } from "./component/mainSceneHelper";
 import { Axis } from "./component/axis";
 import { ServerDataAdapter } from "./component/dataAdapter";
 import * as lStorage from "./component/LocalStorage";
@@ -22,7 +23,7 @@ import { IndexTrack } from "./component/indexTrack";
 export const START_CASH = 100000;
 
 export const enum GameMode {
-    Multi, Auto, Normal, Match
+    Multi, Auto, Normal, Match, Helper
 }
 
 export class MainScene extends Scene {
@@ -33,6 +34,8 @@ export class MainScene extends Scene {
     trackGap: number;
     numTracks;
     scoreLabel: Label;
+    scoreLabel2: Label;
+    previousScore: number;
     titleLabel: Label;
     cash: number;
     stockPosition: { track: CandleTrack, amount: number };
@@ -55,6 +58,7 @@ export class MainScene extends Scene {
     loadingPanel: PIXI.Container;
     playerRank: number;
     showIndex: boolean = true;
+    horseButton: RectButton;
 
     constructor(options) {
         super();
@@ -65,22 +69,22 @@ export class MainScene extends Scene {
         // this.numTracks = 6;
         this.totalRound = options.r || 25;
         this.options.days = this.numHistoryPoints + this.totalRound + 1;
-        this.scoreLabel = new Label('', { align: 'left', fontSize: 25 });
+        this.scoreLabel = new Label('', { align: 'left', fontSize: 23 });
         this.scoreLabel.position.set(5, 5);
         this.addChild(this.scoreLabel);
-        this.titleLabel = new Label('', { align: 'left', fontSize: 25 });
-        this.titleLabel.position.set(300, 5);
+        this.titleLabel = new Label('', { align: 'left', fontSize: 23 });
+        this.titleLabel.position.set(320, 5);
         this.addChild(this.titleLabel);
 
         let horseButton = new RectButton(100, 40, 0x0000ff);
-        horseButton.text = MainScene.renderHorse ? "显示K线" : "显示赛马";
+        horseButton.text = MainScene.renderHorse ? "K 线" : "赛 马";
         horseButton.position.set(director.config.width - 50, 20)
         horseButton.clickHandler = () => {
-            if (horseButton.text == "显示赛马") {
-                horseButton.text = "显示K线";
+            if (horseButton.text == "赛 马") {
+                horseButton.text = "K 线";
                 MainScene.renderHorse = true;
             } else {
-                horseButton.text = "显示赛马";
+                horseButton.text = "赛 马";
                 MainScene.renderHorse = false;
             }
             this.axis.clearGraph();
@@ -89,23 +93,23 @@ export class MainScene extends Scene {
             }
         }
         this.addChild(horseButton);
-
-        let showButton = new RectButton(100, 40, 0x0000ff);
-        showButton.text = "显示按钮";
-        showButton.position.set(director.config.width - 155, 20)
-        showButton.clickHandler = () => {
-            if (showButton.text == "显示按钮") {
-                showButton.text = "隐藏按钮";
-                for (let i = 0; i < this.tracks.length; i++)
-                    this.tracks[i].showButton();
-            } else {
-                showButton.text = "显示按钮";
-                for (let i = 0; i < this.tracks.length; i++)
-                    this.tracks[i].showButton(false);
-            }
-        }
-        this.addChild(showButton);
-        // let infoButton = new RectButton(100, 40, 0x00ff00);
+        this.horseButton = horseButton;
+        // let showButton = new RectButton(100, 40, 0x0000ff);
+        // showButton.text = "显示按钮";
+        // showButton.position.set(director.config.width - 155, 20)
+        // showButton.clickHandler = () => {
+        //     if (showButton.text == "显示按钮") {
+        //         showButton.text = "隐藏按钮";
+        //         for (let i = 0; i < this.tracks.length; i++)
+        //             this.tracks[i].showButton();
+        //     } else {
+        //         showButton.text = "显示按钮";
+        //         for (let i = 0; i < this.tracks.length; i++)
+        //             this.tracks[i].showButton(false);
+        //     }
+        // }
+        // this.addChild(showButton);
+        // let infoButton = new RectButton(100, 40, 0x11AA22);
         // infoButton.text = MainScene.renderHorse ? "显示数据" : "隐藏数据";
         // infoButton.position.set(director.config.width - 150, 20)
         // infoButton.clickHandler = () => {
@@ -179,7 +183,23 @@ export class MainScene extends Scene {
         // if (this.stockPosition != undefined) {
         //     c += this.stockPosition.track.price * this.stockPosition.amount;
         // }
-        this.scoreLabel.value = '总市值: ' + this.totalAmount.toFixed(2);
+        let value = this.totalAmount;
+        this.scoreLabel.value = '总市值: ';
+        this.scoreLabel.removeChild(this.scoreLabel2);
+        let inc = (value - this.previousScore) / this.previousScore * 100;
+        let text = value.toFixed(2);
+        let color = 0xffffff;
+        if (this.previousScore > value) {
+            text += '  ' + inc.toFixed(2) + '%';
+            color = 0x00ff00;
+        } else if (this.previousScore < value) {
+            text += '  +' + inc.toFixed(2) + '%';
+            color = 0xff0000;
+        }
+        this.scoreLabel2 = new Label(text, { fontSize: 23, align: 'left', fill: color });
+        this.scoreLabel2.position.set(this.scoreLabel.width, 0);
+        this.scoreLabel.addChild(this.scoreLabel2);
+        this.previousScore = value;
         this.titleLabel.value = this.round + '/' + this.totalRound;
     }
 
@@ -187,7 +207,7 @@ export class MainScene extends Scene {
     // }
 
     init(useOldData = false) {
-        this.cash = START_CASH;
+        this.previousScore = this.cash = START_CASH;
         this.stockPosition = undefined;
         this.focusTrack = undefined;
         this.enabled = true;
@@ -231,6 +251,8 @@ export class MainScene extends Scene {
         }
         this.gameStart();
     }
+
+
 
     gameStart() {
         // console.log('gamestart');
@@ -307,7 +329,7 @@ export class MainScene extends Scene {
         rect.interactive = true;
         rect.alpha = 0.7;
 
-        let replay2 = new RectButton(180, 60, 0x00ff00);
+        let replay2 = new RectButton(180, 60, 0x11AA22);
         replay2.text = "换股";
         replay2.position.set(director.config.width / 2, 760);
         replay2.clickHandler = () => {
@@ -323,7 +345,7 @@ export class MainScene extends Scene {
         exit.position.set(director.config.width / 2, 850);
         this.winPanel.addChild(exit);
 
-        let rank = new RectButton(180, 60, 0x00ff00);
+        let rank = new RectButton(180, 60, 0x11AA22);
         rank.position.set(director.config.width / 2, 670);
         rank.text = director.user.isLogin ? "龙虎榜" : "登录";
         rank.clickHandler = () => {
@@ -356,7 +378,7 @@ export class MainScene extends Scene {
             if (director.user.unlockedLevel == this.numTracks)
                 director.user.unlockedLevel++;
             if (director.user.unlockedLevel <= SinglePlayerScene.totalLevel) {
-                let next = new RectButton(180, 60, 0x00ff00);
+                let next = new RectButton(180, 60, 0x11AA22);
                 next.text = "下一关";
                 next.position.set(director.config.width / 2, 580);
                 next.clickHandler = () => {
@@ -478,6 +500,7 @@ export class MainScene extends Scene {
             properties: {
                 'Level': this.numTracks,
                 'Mode': this.gameMode,
+                'Display': this.horseButton.text,
                 'User': director.user.isLogin ? director.user.name : ""
             },
             measurements: {
@@ -537,8 +560,13 @@ export class MainScene extends Scene {
         this.sell();
         this.buy(track);
         this.renderFrontAxis();
-        if (this.gameMode == GameMode.Normal || this.gameMode == GameMode.Match)
+        if (this.gameMode == GameMode.Normal || this.gameMode == GameMode.Match || this.gameMode == GameMode.Helper)
             this.next();
+        this.onTrackClickEnd();
+    }
+
+    onTrackClickEnd() {
+
     }
 
     startLoading() {

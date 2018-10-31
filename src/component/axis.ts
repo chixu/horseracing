@@ -97,7 +97,7 @@ export class Axis extends PIXI.Container {
         this.playersContainer.removeChildren();
         // d = d || this.mainScene.playersData;
         for (let i = 0; i < d.length; i++) {
-            this.renderPlayer(d[i].n, d[i].s, 0x00ff00);
+            this.renderPlayer(d[i].n, d[i].s, 0x11AA22);
         }
         this.renderPlayer('你', this.mainScene.profit, 0xff0000);
     }

@@ -23,7 +23,10 @@ export class ServerDataAdapter extends DataAdapter {
 
     getData() {
         let o = this.mainScene.options;
-        if (this.mainScene.gameMode == GameMode.Match || this.mainScene.gameMode == GameMode.Multi) {
+        if (this.mainScene.gameMode == GameMode.Helper) {
+            // return director.request.get('helper_stock_data', {}, true);
+            return director.request.get('./data/helper_stock_data.json', {}, true);
+        } else if (this.mainScene.gameMode == GameMode.Match || this.mainScene.gameMode == GameMode.Multi) {
             return director.request.get(Request.gameStockInfo, {
                 code: o.code + (this.mainScene.showIndex ? "_i000001" : ""),
                 date: o.enddate,

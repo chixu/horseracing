@@ -6,6 +6,8 @@ import { SinglePlayerScene } from "./singlePlayerScene";
 import { MultiPlayerScene } from "./multiPlayerScene";
 import { MatchListScene } from "./matchListScene";
 import { RecordScene } from "./recordScene";
+import { HelperScene } from "./helperScene";
+import * as lStorage from "./component/LocalStorage";
 
 export class SelectionScene extends Scene {
     lastButtonY = 170;
@@ -17,21 +19,30 @@ export class SelectionScene extends Scene {
         let l = new Label("多空赛马", { fontSize: 50 });
         this.addChild(l);
         l.position.set(director.config.width / 2, 150);
-
-        this.addButton("单人训练", () => {
-            director.sceneManager.replace(new SinglePlayerScene());
-        });
-        this.addButton("多人训练", () => {
-            director.socket.init().then(() =>
-                director.sceneManager.replace(new MultiPlayerScene())
-            );
-        });
-        this.addButton("参加比赛", () => {
-            if (director.user.isLogin)
-                director.sceneManager.replace(new MatchListScene());
-            else
-                alert("请先登录海知平台");
-        });
+        console.log(lStorage.get('tutorial'));
+        console.log(lStorage.get('tutorial') === 1);
+        console.log(lStorage.get('tutorial') === '1');
+        if (director.user.tutorial || lStorage.getNum('tutorial')) {
+            this.addButton("单人训练", () => {
+                director.sceneManager.replace(new SinglePlayerScene());
+                // director.sceneManager.replace(new HelperScene());
+            });
+            this.addButton("多人训练", () => {
+                director.socket.init().then(() =>
+                    director.sceneManager.replace(new MultiPlayerScene())
+                );
+            });
+            this.addButton("参加比赛", () => {
+                if (director.user.isLogin)
+                    director.sceneManager.replace(new MatchListScene());
+                else
+                    alert("请先登录海知平台");
+            });
+        } else {
+            this.addButton("教学关卡", () => {
+                director.sceneManager.replace(new HelperScene());
+            });
+        }
         if (!director.user.isLogin) {
             this.addButton("登 录", () => {
                 director.user.showLogin(() => director.sceneManager.replace(new SelectionScene()));

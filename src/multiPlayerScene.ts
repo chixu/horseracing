@@ -72,7 +72,7 @@ export class MultiPlayerScene extends Scene {
         if (data) {
             for (let i = 0; i < data.length; i++) {
                 let d = data[i];
-                let b = new RectButton(420, 85, 0x00ff00);
+                let b = new RectButton(420, 85, 0x11AA22);
                 // b.text = `房间${i + 1}   (${data[i].u}/4)`;
                 b['id'] = d.id;
                 b.clickHandler = () => {

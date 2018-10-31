@@ -4,6 +4,7 @@
 // import { AppContext } from "./core/appContext";
 import { Device, Platform } from "./device";
 import { Request } from "../request";
+import * as constant from "../constant";
 // import { Injector } from "./core/injector";
 // import { SingleEventEmitter } from "./core/singleEventEmitter";
 // import { InputManager } from "./core/inputManager";
@@ -112,11 +113,12 @@ export function run() {
     // config.socketUrl = "ws://192.168.31.44:8081";
     // config.dataDomain = '/data/';
     config.socketUrl = "ws://132.232.37.157:8081";
-    // if (config.env == 'dev') {
-    //     http.setCookie('username', 'winter002');
-    //     // config.apiDomain = window.location.protocol + '//' + window.location.hostname + `/horseriding/api/`;
-    //     config.apiDomain = `http://192.168.0.136/game/`;
-    // } else
+    if (config.env == 'dev') {
+        // http.setCookie('username', 'winter002');
+        // config.apiDomain = window.location.protocol + '//' + window.location.hostname + `/horseriding/api/`;
+        config.apiDomain = `http://localhost/game/`;
+        // constant.Request.gameStockInfo = "http://localhost/game/get_stock_info.php";
+    } else
         config.apiDomain = window.location.origin + `/game/`;
     // config.apiDomain = `http://localhost/horseriding/api/`;
     config.dataDomain = 'data/';
