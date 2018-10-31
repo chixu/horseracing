@@ -106,11 +106,13 @@ class GameApi{
             $user);
             $this->db->query($sql);
             $this->sendData(array(
-                "level" => 1
+                "level" => 1,
+                "tutorial" => $array[0]["tutorial"]
             ));
         } else {
             $this->sendData(array(
-                "level" => $array[0]["level"]
+                "level" => $array[0]["level"],
+                "tutorial" => $array[0]["tutorial"]
             ));
         }
     }
@@ -139,6 +141,12 @@ class GameApi{
             $this->dt,$level,$user);
             $this->db->query($sql);
         }
+    }
+
+    public function update_user_tutorial($user){
+        $sql = sprintf("UPDATE %s.dksm_user SET tutorial=1 WHERE name = '%s'",
+        $this->dt,$user);
+        $this->db->query($sql);
     }
     // private function get_result($r){
     //     return $r->result_array();

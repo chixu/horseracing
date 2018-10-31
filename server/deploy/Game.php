@@ -185,5 +185,7 @@ class Game extends MY_Controller{
 	public function create_submatch(){
 		$this->game_log->create_submatch();
 	}
-	
+	public function update_user_tutorial(){
+		$this->game_log->update_user_tutorial($this->get_username());
+	}
 }

@@ -113,6 +113,11 @@ class Game_login_model extends CI_Model{
         $api = new GameApi('ht',$this->db);
         $api->create_submatch($u);
     }
+
+    public function update_user_tutorial($u){
+        $api = new GameApi('ht',$this->db);
+        $api->update_user_tutorial($u);
+    }
 	// public function update_level(){
     //     $api = new GameApi('ht',$this->db);
     //     $api->update_level();
