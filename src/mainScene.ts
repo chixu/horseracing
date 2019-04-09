@@ -58,6 +58,7 @@ export class MainScene extends Scene {
     loadingPanel: PIXI.Container;
     playerRank: number;
     showIndex: boolean = true;
+    uploadingScore: boolean = true;
     horseButton: RectButton;
 
     constructor(options) {
@@ -408,12 +409,13 @@ export class MainScene extends Scene {
         l2.position.set(director.config.width / 2, 170);
 
         //upload score
-
-        let postData = this.getGamePostData();
-        if (director.user.isLogin) {
-            director.request.post('upload_score', postData);
-        } else {
-            lStorage.setRecord(postData);
+        if (this.uploadingScore) {
+            let postData = this.getGamePostData();
+            if (director.user.isLogin) {
+                director.request.post('upload_score', postData);
+            } else {
+                lStorage.setRecord(postData);
+            }
         }
 
         // director.request.get('break_record', {

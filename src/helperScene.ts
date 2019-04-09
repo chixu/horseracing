@@ -20,6 +20,7 @@ export class HelperScene extends MainScene {
         super(options);
         this.helperTextColor = 0xFFFF00;
         this.sceneName = "帮助";
+        this.uploadingScore = false;
     }
 
     gameStart() {

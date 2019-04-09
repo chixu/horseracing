@@ -62,7 +62,7 @@ class GameApi{
         (select username, max(value) as value from %s.dksm_record 
         where level = %s group by username) as t
         left join %s.dksm_record as t2
-        on t.username = t2.username and t.value = t2.value order by t2.value desc, date desc"
+        on t.username = t2.username and t.value = t2.value order by t2.value desc, date desc limit 10"
         , $this->dt,
             strval($level),
             $this->dt
@@ -137,8 +137,8 @@ class GameApi{
             $this->dt,$user,$level);
             $this->db->query($sql);
         } else {
-            $sql = sprintf("UPDATE %s.dksm_user SET level=%s WHERE name = '%s'",
-            $this->dt,$level,$user);
+            $sql = sprintf("UPDATE %s.dksm_user SET level=%s WHERE name = '%s' and level < %s",
+            $this->dt,$level,$user,$level);
             $this->db->query($sql);
         }
     }

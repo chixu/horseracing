@@ -36,7 +36,7 @@ $self_name = $this->session->userdata('username');
 <body>
 <div class="bg-white row wrapper" style="margin: 1% 0;min-height: 800px;">
     <div style="position:fixed;right: 0px;bottom:0px;background-color: white;">
-        <img src="../assets/game/images/qr.png"/>
+        <img src="../assets/game/images/qr.png" style="width: 160px;height: 160px;"/>
         <div style="text-align: center;width: 100%;margin-bottom:5px">
                 扫描二维码在手机上玩
         </div>
