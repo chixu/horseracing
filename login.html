@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+    <div class="login-page">
+        <h1>login</h1>
+        <input value="login" onclick="login()" type="button">
+    </div>
+    <script>
+        function login(){
+            console.log(document.referrer);
+            window.location.href = window.location.origin + "/wrapper.html";
+        }
+    </script>
+</body>
+
+</html>

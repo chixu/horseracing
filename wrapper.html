@@ -3,6 +3,7 @@
 <html>
 
 <head>
+    <meta name="referrer" content="origin">
     <style>
         body {
             background-image: url("images/bg.jpg");
@@ -21,12 +22,13 @@
         
     </div>
     <div style="background-image: url(" images/bg.jpg ");">
-        <iframe style="display: block; width: 600px; height: 900px; margin: auto;" frameborder="0">
+        <iframe style="display: block; width: 600px; height: 900px; margin: auto;" frameborder="0"
+        >
         </iframe>
     </div>
     <script>
         var iframe = document.getElementsByTagName('iframe')[0];
-        iframe.src = "index.html?platform=web&env=dev&username=test123" + (document.referrer.indexOf('login')>-1?'&login=1':'');
+        iframe.src = "index.html?platform=web&env=dev" + (document.referrer.indexOf('login')>-1?'&login=1':'');
         console.log('zzzz', document.referrer);   
         function redirect() {
             window.location.href = window.location.origin + "/login.html";
