@@ -116,35 +116,49 @@ export class Candle extends PIXI.Container {
         this.addChild(l);
     }
 
+    // renderHorse() {
+    //     let d = this.data;
+    //     this.renderBar();
+    //     let textures = director.resourceManager.atlas('horse');
+    //     let animator: any = new PIXI.extras['AnimatedSprite'](textures.slice(24, 28));
+    //     animator.animationSpeed = 0.2;
+    //     animator.gotoAndPlay(0);
+    //     let scale = 1.3;
+    //     animator.scale.set(scale, scale);
+    //     animator.position.set(-animator.width / 2, -d.heightRatio * d.close - animator.height / 2);
+    //     this.addChild(animator);
+    // }
+
+    // renderRider() {
+    //     let d = this.data;
+    //     this.renderBar();
+    //     let textures = director.resourceManager.atlas('rider');
+    //     let animator: any = new PIXI.extras['AnimatedSprite'](textures.slice(12));
+    //     animator.animationSpeed = 0.2;
+    //     let scale = 1.2;
+    //     animator.scale.set(scale, scale);
+    //     animator.position.set(-animator.width / 2, -d.heightRatio * d.close - animator.height / 2 - 4);
+    //     animator.gotoAndPlay(0);
+    //     this.addChild(animator);
+    // }
+
     renderHorse() {
         let d = this.data;
         this.renderBar();
-        let textures = director.resourceManager.atlas('horse');
-        let animator: any = new PIXI.extras.AnimatedSprite(textures.slice(24, 28));
-        animator.animationSpeed = 0.2;
-        animator.gotoAndPlay(0);
-        let scale = 1.3;
-        animator.scale.set(scale, scale);
-        animator.position.set(-animator.width / 2, -d.heightRatio * d.close - animator.height / 2);
-        // animator.position.set(-animator.width / 2, - animator.height / 2);
-        this.addChild(animator);
+        let horse = director.resourceManager.createImage('horse.png');
+        // let scale = 1.3;
+        // horse.scale.set(scale, scale);
+        horse.position.set(-horse.width / 2, -d.heightRatio * d.close - horse.height / 2);
+        this.addChild(horse);
     }
 
     renderRider() {
         let d = this.data;
         this.renderBar();
-        let textures = director.resourceManager.atlas('rider');
-        let animator: any = new PIXI.extras.AnimatedSprite(textures.slice(12));
-        animator.animationSpeed = 0.2;
-        let scale = 1.2;
-        animator.scale.set(scale, scale);
-        animator.position.set(-animator.width / 2, -d.heightRatio * d.close - animator.height / 2 - 4);
-        // animator.position.set(-animator.width / 2, - animator.height / 2 - 4);
-        animator.gotoAndPlay(0);
-        this.addChild(animator);
+        let horse = director.resourceManager.createImage('horse2.png');
+        // let scale = 1.2;
+        // horse.scale.set(scale, scale);
+        horse.position.set(-horse.width / 2, -d.heightRatio * d.close - horse.height / 2 - 4);
+        this.addChild(horse);
     }
-    // setPosition(originY: number = 0) {
-    //     this.y += (originY - this.centerValue) * Candle.heightRatio;
-    // }
-
 }

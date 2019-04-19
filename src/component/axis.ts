@@ -131,7 +131,7 @@ export class Axis extends PIXI.Container {
         this.zeroPosition = lGap * unitRes.top;
         this.heightRatio = lGap / unit;
         let l = new PIXI.Graphics();
-        l.lineStyle(lineWidth, color);
+        l.lineStyle(lineWidth, color, .7);
         for (let i = 0; i < lines; i++) {
             l.moveTo(-opt.width / 2, i * lGap);
             l.lineTo(opt.width / 2, i * lGap);

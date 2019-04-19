@@ -1,48 +1,46 @@
 
 import { Label } from "./core/component/label";
-import { RectButton } from "./core/component/rectButton";
-import { ButtonGroup } from "./core/component/buttonGroup";
+// import { RectButton } from "./core/component/rectButton";
+// import { ButtonGroup } from "./core/component/buttonGroup";
 import { Scene } from "./core/scene";
 import * as director from "./core/director";
-import { Command } from "./core/socket";
+import * as display from "./utils/display";
+import * as graphic from "./utils/graphic";
+import { ToggleButton } from "./core/component/toggleButton";
+import { ToggleButtonGroup } from "./core/component/toggleButtonGroup";
 
 export class RecordScene extends Scene {
     recordContainer: PIXI.Container;
-    trackButtons: ButtonGroup;
+    trackButtons: ToggleButtonGroup;
 
     constructor() {
         super();
+        display.addBg(this);
+        display.addTitle(this, '排行榜');
         this.sceneName = "龙虎榜";
-        let l = new Label("排行榜", { fontSize: 50 });
-        this.addChild(l);
-        l.position.set(director.config.width / 2, 100);
+        // let l = new Label("排行榜", { fontSize: 50 });
+        // this.addChild(l);
+        // l.position.set(director.config.width / 2, 100);
 
-        let b2 = new RectButton(220, 65, 0xff0000);
-        b2.text = "退出";
+        let b2 = display.exitButton();
         b2.clickHandler = () => {
             director.sceneManager.pop();
         }
+        b2.y = 750;
         this.addChild(b2);
-        b2.position.set(director.config.width / 2, 820);
-        // this.exitButton = b2;
 
         this.recordContainer = new PIXI.Container();
         this.addChild(this.recordContainer);
 
-        let bg = new ButtonGroup({
-            buttonHeight: 70,
-            buttonWidth: 70,
-            texts: ["1", "2", "3", "4", "5", "6"],
-            // defaultIndex: data.n - 1
-        });
-        bg.position.set(director.config.width / 2, 170);
-        bg.selectHandler = (idx) => {
+        let btnG = this.createToggleButtonGroup();
+        btnG.position.set(director.config.width / 2, 710);
+        btnG.selectHandler = (idx) => {
             // console.log(idx, 'selected');
             this.getRankings(idx + 1);
         }
-        this.addChild(bg);
-        this.trackButtons = bg;
-        bg.select(0, true);
+        this.addChild(btnG);
+        this.trackButtons = btnG;
+        this.getRankings(1);
     }
 
     getRankings(level) {
@@ -58,28 +56,35 @@ export class RecordScene extends Scene {
         // console.log(data);
         this.recordContainer.removeChildren();
         if (data.length == 0) {
-            let l = new Label("还没有排名,快去挑战吧", { fontSize: 38 });
-            l.position.set(director.config.width / 2, 260);
+            let l = new Label("还没有排名,快去挑战吧", { fontSize: 30 });
+            l.position.set(director.config.width / 2, 360);
             this.recordContainer.addChild(l);
         } else {
-            let h1 = new Label("排名", { fontSize: 35 });
-            let h2 = new Label("玩家", { fontSize: 35 });
-            let h3 = new Label("收益", { fontSize: 35 });
-            h1.position.set(150, 250);
-            h2.position.set(300, 250);
-            h3.position.set(450, 250);
+            let h1 = new Label("排名", { fontSize: 22 });
+            let h2 = new Label("玩家", { fontSize: 22 });
+            let h3 = new Label("收益", { fontSize: 22 });
+            let headY = 225;
+            h1.position.set(140, headY);
+            h2.position.set(300, headY);
+            h3.position.set(460, headY);
             this.recordContainer.addChild(h1);
             this.recordContainer.addChild(h2);
             this.recordContainer.addChild(h3);
+            let line = graphic.line(400, 0, 0xffffff, 2);
+            line.position.set((director.config.width - line.width) / 2, headY + 25);
+            this.recordContainer.addChild(line);
             let i = 0;
             for (let k in data) {
+                let top = 50;
+                let gap = 42;
+                let fontsize = 20;
                 let d = data[k];
-                let l1 = new Label((i + 1).toString(), { fontSize: 30 });
-                let l2 = new Label(d.user, { fontSize: 30 });
-                let l3 = new Label((parseFloat(d.value)).toFixed(2) + "%", { fontSize: 30 });
-                l1.position.set(h1.x, h1.y + i * 50 + 46);
-                l2.position.set(h2.x, h2.y + i * 50 + 46);
-                l3.position.set(h3.x, h3.y + i * 50 + 46);
+                let l1 = new Label((i + 1).toString(), { fontSize: fontsize });
+                let l2 = new Label(d.user, { fontSize: fontsize });
+                let l3 = new Label((parseFloat(d.value)).toFixed(2) + "%", { fontSize: fontsize });
+                l1.position.set(h1.x, h1.y + i * gap + top);
+                l2.position.set(h2.x, h2.y + i * gap + top);
+                l3.position.set(h3.x, h3.y + i * gap + top);
                 this.recordContainer.addChild(l1);
                 this.recordContainer.addChild(l2);
                 this.recordContainer.addChild(l3);
@@ -88,57 +93,29 @@ export class RecordScene extends Scene {
         }
     }
 
-    // renderPlayers(data) {
-    //     this.recordContainer.removeChildren();
-    //     if (data) {
-    //         this.title.value = data.id + '的赛场';
-    //         let users = data.u;
-    //         if (data.o && users.length > 1) {
-    //             let b2 = new RectButton(220, 65, 0xff0000);
-    //             b2.text = "开始游戏";
-    //             b2.clickHandler = () => {
-    //                 director.socket.send(Command.startGame, { n: this.trackButtons.selectedIndex + 1, t: this.timerButtons.selectedIndex + 1 });
-    //             }
-    //             this.playerContainer.addChild(b2);
-    //             b2.position.set(director.config.width / 2, 780);
-    //             this.exitButton.y = b2.y + 80;
-    //         }
-    //         if (data.o) {
+    createToggleButton(text: string) {
+        let b = new ToggleButton();
+        b.top = new Label(text, { fontSize: 22 });
+        let up = graphic.rectangle(30, 40, 0xff0000);
+        up.position.set(-up.width / 2, -10);
+        up.alpha = 0;
+        b.up = up;
+        let down = graphic.rectangle(22, 3, 0xffffff);
+        down.position.set(-down.width / 2, 17);
+        b.down = down;
+        return b;
+    }
 
-    //             this.trackButtons = bg;
-
-    //             let bg2 = new ButtonGroup({
-    //                 buttonHeight: 55,
-    //                 buttonWidth: 100,
-    //                 texts: ["1秒", "2秒", "3秒"],
-    //                 defaultIndex: data.t - 1,
-    //                 textHeight: 35
-    //             });
-    //             bg2.position.set(director.config.width / 2, 700);
-
-    //             bg2.selectHandler = bg.selectHandler = () => {
-    //                 director.socket.send(Command.setRoomInfo, { n: bg.selectedIndex + 1, t: bg2.selectedIndex + 1 })
-    //             };
-    //             this.playerContainer.addChild(bg2);
-    //             this.timerButtons = bg2;
-    //         } else {
-    //             let l = new Label(data.n + "条赛道", { fontSize: 40 });
-    //             this.playerContainer.addChild(l);
-    //             l.position.set(director.config.width / 2, 620);
-    //             let l1 = new Label(data.t + '秒决策时间', { fontSize: 40 });
-    //             this.playerContainer.addChild(l1);
-    //             l1.position.set(director.config.width / 2, 700);
-    //         }
-    //         // users = ['123412', '123412', '123412', '123412', '123412', '123412', '123412', '123412', '123412'];
-    //         for (let i = 0; i < users.length; i++) {
-    //             let b = new RectButton(200, 65, 0x00ff00);
-    //             b.text = users[i];
-    //             // b.clickHandler = () => {
-    //             //     // director.socket.send(Command.createRoom);
-    //             // }
-    //             this.playerContainer.addChild(b);
-    //             b.position.set(director.config.width / 2 - 110 + 220 * (i % 2), 200 + Math.floor(i / 2) * 80);
-    //         }
-    //     }
-    // }
+    createToggleButtonGroup() {
+        let values = ["1", "2", "3", "4", "5", "6"];
+        let buttons = [];
+        for (let k in values) {
+            buttons.push(this.createToggleButton(values[k]));
+        }
+        return new ToggleButtonGroup({
+            buttons: buttons,
+            values: values,
+            gap: 25
+        })
+    }
 }

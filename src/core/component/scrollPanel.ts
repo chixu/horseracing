@@ -1,6 +1,6 @@
 import * as graphic from "../../utils/graphic"
 import * as math from "../../utils/math"
-// import * as director from "../director";
+import * as director from "../director";
 
 export class ScrollPanel extends PIXI.Container {
     // container;
@@ -11,7 +11,8 @@ export class ScrollPanel extends PIXI.Container {
     // clickHandler;
     private _isDown: boolean = false;
     private itemsContainer: PIXI.Container;
-    private scrollBar: PIXI.Graphics;
+    private scrollBar: PIXI.Sprite;
+    private scrollBarBg: PIXI.Sprite;
     private maskSprite: PIXI.Graphics;
     private panelHeight: number;
     private panelWidth: number;
@@ -48,7 +49,7 @@ export class ScrollPanel extends PIXI.Container {
     }
 
     public moveHandler(e) {
-        if (!this._enabled || !this._isDown) return;
+        if (!this._enabled || !this._isDown || !this.scrollBar) return;
         let y = e.data.getLocalPosition(this, e.data.global).y;
         this.itemsContainer.y =
             math.clamp(y - this.touchDownY + this.touchDownContainerY, this.panelHeight - this.itemsHeight, 0);
@@ -62,16 +63,23 @@ export class ScrollPanel extends PIXI.Container {
 
     private setScrollBar() {
         this.removeChild(this.scrollBar);
+        this.removeChild(this.scrollBarBg);
         if (this.hasScrollBar) {
-            this.scrollBar = graphic.rectangle(10, this.panelHeight * this.panelHeight / this.itemsHeight, 0xffffff);
-            this.scrollBar.position.set(this.panelWidth - 10, 0);
+            // this.scrollBar = graphic.rectangle(10, this.panelHeight * this.panelHeight / this.itemsHeight, 0xffffff);
+            this.scrollBarBg = director.resourceManager.createImage('scroll_bar_bg.png');
+            this.scrollBar = director.resourceManager.createImage('scroll_bar.png');
+            this.scrollBar.height = this.panelHeight * this.panelHeight / this.itemsHeight;
+            this.scrollBarBg.height = this.panelHeight;
+            this.scrollBarBg.position.set(this.panelWidth - this.scrollBar.width/2, 0);
+            this.scrollBar.position.set(this.panelWidth - this.scrollBar.width, 0);
+            this.addChild(this.scrollBarBg);
             this.addChild(this.scrollBar);
         }
     }
 
     private updateScrollBar() {
         if (this.hasScrollBar) {
-            this.scrollBar.position.set(this.panelWidth - 10, -this.itemsContainer.y / this.itemsHeight * this.panelHeight);
+            this.scrollBar.y = -this.itemsContainer.y / this.itemsHeight * this.panelHeight;
         }
     }
 

@@ -17,6 +17,7 @@ export class Label extends PIXI.Container {
             // dropShadowAngle: Math.PI / 6,
             // dropShadowDistance: 6,
         };
+        if (opt.lineHeight) style.lineHeight = opt.lineHeight;
         this.text = new PIXI.Text(str, style);
         this.align = opt.align || 'center';
         this.addChild(this.text);

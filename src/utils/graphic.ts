@@ -13,6 +13,14 @@ export function circle(radius: number, color: number = 0x0) {
     return g;
 }
 
+export function line(x, y, color = 0, lineWidth = 1) {
+    let line = new PIXI.Graphics();
+    line.lineStyle(lineWidth, color);
+    line.moveTo(0, 0);
+    line.lineTo(x, y);
+    return line;
+}
+
 export function rectBorder(w, h, color = 0, line = 1) {
     let rect = new PIXI.Graphics();
     rect.lineStyle(line, color);

@@ -5,7 +5,8 @@ import { Label } from "../core/component/label";
 import { MainScene } from "../mainScene";
 import * as math from "../utils/math";
 import * as array from "../utils/array";
-import * as graphic from "../utils/graphic";
+import * as director from "../core/director";
+import { Slide } from "../core/component/slide";
 
 const DATE_IDX = 0;
 const OPEN_IDX = 1;
@@ -44,6 +45,10 @@ export class CandleTrack extends PIXI.Container {
     startDate: Date;
     endDate: Date;
     infoPanel: PIXI.Container;
+    infoPanelBg: Slide;
+    infoPanelFontSize: number;
+    infoPanelWidth: number;
+    infoPanelLineSpace: number;
     // static dataDates: number[];
     // parsedData: any[];
     clickedArea;
@@ -65,6 +70,9 @@ export class CandleTrack extends PIXI.Container {
         this.candleContainer = new PIXI.Container();
         this.addChild(this.candleContainer);
         let buttonW = [120, 120, 120, 96, 80, 68][this.mainScene.numTracks - 1];
+        this.infoPanelFontSize = [20, 19, 18, 16, 16, 15][this.mainScene.numTracks - 1];
+        this.infoPanelWidth = [2, 1.8, 1.5, 1.3, 1.15, 1][this.mainScene.numTracks - 1];
+        this.infoPanelLineSpace = 25;//[25, 5, 5, 5, 5, 5][this.mainScene.numTracks - 1];
         // let clickedArea = graphic.rectangle(buttonW, 420, 0xff0000);
         let clickedArea = new RectButton(buttonW, 420, 0xff0000);
         clickedArea.alpha = 0;
@@ -82,6 +90,7 @@ export class CandleTrack extends PIXI.Container {
         this.addChild(this.button);
 
         this.infoPanel = new PIXI.Container();
+        // this.infoPanel = DOMPointReadOnly
         this.addChild(this.infoPanel);
     }
 
@@ -98,6 +107,7 @@ export class CandleTrack extends PIXI.Container {
         this.focus = false;
         if (this.infoPanel)
             this.infoPanel.removeChildren();
+        this.infoPanelBg = undefined;
     }
 
     setDatas(d?: any, name?: string) {
@@ -108,42 +118,23 @@ export class CandleTrack extends PIXI.Container {
         }
         // console.log(this.datas);
         if (this.infoPanel) {
+            this.infoPanelBg = new Slide();
+            this.infoPanelBg.add('off', director.resourceManager.createImage('panel2.png'));
+            this.infoPanelBg.add('on', director.resourceManager.createImage('panel.png'));
+            this.infoPanelBg.scale.set(this.infoPanelWidth, 1.3);
+            this.infoPanelBg.position.set(-this.infoPanelBg.width / 2, 200)
+            this.infoPanel.addChild(this.infoPanelBg);
             let info;
             let inc = (this.fullData.NetProfitRate * 100).toFixed(2);
             if (this.mainScene.numTracks > 4)
-                info = new Label(`盈${this.fullData.pe}\n净${this.fullData.pb}\n增${inc}%\n`, { fontSize: 18, align: 'left' });
+                info = new Label(`盈${this.fullData.pe}\n净${this.fullData.pb}\n增${inc}%\n`, { fontSize: this.infoPanelFontSize, align: 'left', lineHeight: this.infoPanelLineSpace });
             else
-                info = new Label(`市盈${this.fullData.pe}\n市净${this.fullData.pb}\n增长${inc}%\n`, { fontSize: 20, align: 'left' });
+                info = new Label(`市盈${this.fullData.pe}\n市净${this.fullData.pb}\n增长${inc}%\n`, { fontSize: this.infoPanelFontSize, align: 'left', lineHeight: this.infoPanelLineSpace });
             this.infoPanel.addChild(info);
-            info.position.set(-this.button.width / 2, 220);
+            info.position.set(-this.button.width / 2 + 3, 220);
         }
-        // let numPts = this.numHistoryPoints + this.mainScene.totalRound;
-        // if (CandleTrack.origDataIndex == undefined)
-        //     CandleTrack.origDataIndex = math.randomInteger(1, d.length - numPts);
-        // this.dataIndex = this.numHistoryPoints - 1;
-        // let dates = [];
-        // for (let i = 0; i < numPts; i++) {
-        //     dates.push(d[CandleTrack.origDataIndex + i][0]);
-        // }
-        // if (CandleTrack.dataDates) {
-        //     let startDate = CandleTrack.dataDates[0];
-        //     let endDate = CandleTrack.dataDates[CandleTrack.dataDates.length - 1];
-        //     for (let i = 0; i < d.length; i++) {
-        //         let date = d[i];
-        //         if (startDate < date && date < endDate && CandleTrack.dataDates.indexOf(date) == -1) {
-        //             array.insertAsc(CandleTrack.dataDates, date);
-        //         }
-        //     }
-        // } else {
-        //     CandleTrack.dataDates = dates;
-        // }
-        // this.dataIndex = 10;
-        // this.nextData();
-        // this.dataIndex += this.numHistoryPoints;
-        // this.origDataIndex = this.dataIndex;
         this.stockCode = name;
         this.stockName = d.name;
-        // console.log(CandleTrack.dataDates.length, CandleTrack.dataDates);
     }
 
     // getDataByDate(date) {
@@ -244,6 +235,8 @@ export class CandleTrack extends PIXI.Container {
         this.candle.x = (-this.mainScene.numTracks / 2 + this.index) * this.mainScene.trackGap;
         // candle.y = this.zeroPosition;
         this.mainScene.axis.addCandle(this.candle);
+        if (this.infoPanelBg)
+            this.infoPanelBg.goto(this.focus ? 'on' : 'off');
     }
 
     get price(): number {

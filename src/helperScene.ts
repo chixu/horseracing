@@ -1,7 +1,8 @@
 import * as director from "./core/director";
 import { Label } from "./core/component/label";
-import { RectButton } from "./core/component/RectButton";
+// import { RectButton } from "./core/component/RectButton";
 import * as graphic from "./utils/graphic";
+import * as display from "./utils/display";
 import { SelectionScene } from "./selectionScene";
 import { MainScene, GameMode } from "./mainScene";
 import { Helper } from "./component/helper";
@@ -10,7 +11,8 @@ import * as lStorage from "./component/LocalStorage";
 export class HelperScene extends MainScene {
     helperContainer: PIXI.Container;
     helperIndex: number;
-    helperTextColor: number
+    helperTextColor: number;
+    helperFontSize: number;
 
     constructor() {
         let options: any = {};
@@ -18,7 +20,9 @@ export class HelperScene extends MainScene {
         options.n = 1;
         options.r = 15;
         super(options);
-        this.helperTextColor = 0xFFFF00;
+        // this.helperTextColor = 0xFFFF00;
+        this.helperTextColor = 0x7afff9;
+        this.helperFontSize = 24;
         this.sceneName = "帮助";
         this.uploadingScore = false;
     }
@@ -34,9 +38,9 @@ export class HelperScene extends MainScene {
     page1() {
         let h1 = new Helper(0, 0, 600, 400);
         h1.addChild(this.addContinueButton());
-        let l1 = new Label("红色线: 我的市值曲线", { fontSize: 28, fill: 0xff0000, align: 'left' });
-        let l2 = new Label("白色线: 上证指数的市值曲线", { fontSize: 28, fill: 0xffffff, align: 'left' });
-        let l3 = new Label("其他色线: 对应颜色股票的市值曲线", { fontSize: 28, fill: 0xFFAEFD, align: 'left' });
+        let l1 = new Label("红色线: 我的市值曲线", { fontSize: this.helperFontSize, fill: 0xff0000, align: 'left' });
+        let l2 = new Label("白色线: 上证指数的市值曲线", { fontSize: this.helperFontSize, fill: 0xffffff, align: 'left' });
+        let l3 = new Label("其他色线: 对应颜色股票的市值曲线", { fontSize: this.helperFontSize, fill: 0xFFAEFD, align: 'left' });
         l1.position.set(50, 420);
         l2.position.set(50, 480);
         l3.position.set(50, 540);
@@ -53,9 +57,9 @@ export class HelperScene extends MainScene {
         h1.addChild(arrow2);
         let arrow3 = graphic.arrow(290, 815, 80, 1.57, 3, color);
         h1.addChild(arrow3);
-        let l1 = new Label("选择空仓", { fontSize: 28, align: 'left', fill: color });
-        let l2 = new Label("选择持有该只股票", { fontSize: 28, align: 'left', fill: color });
-        let l3 = new Label("股票信息", { fontSize: 28, align: 'left', fill: color });
+        let l1 = new Label("选择空仓", { fontSize: this.helperFontSize, align: 'left', fill: color });
+        let l2 = new Label("选择持有该只股票", { fontSize: this.helperFontSize, align: 'left', fill: color });
+        let l3 = new Label("股票信息", { fontSize: this.helperFontSize, align: 'left', fill: color });
         l1.position.set(80, 330);
         l2.position.set(340, 330);
         l3.position.set(150, 800);
@@ -173,10 +177,11 @@ export class HelperScene extends MainScene {
         this.helperContainer.addChild(h1);
     }
 
-    addContinueButton(): RectButton {
-        let b = new RectButton(220, 65, 0x11AA22);
-        b.text = "继 续";
-        b.position.set(300, 750);
+    addContinueButton(): any {
+        // let b = new RectButton(220, 65, 0x11AA22);
+        // b.text = "继 续";
+        let b = display.normalButton('继 续');
+        b.y = 650;
         b.clickHandler = () => this.nextHelper();
         return b;
     }
@@ -200,37 +205,53 @@ export class HelperScene extends MainScene {
         this.helperIndex++;
     }
 
-    renderGameOverUi() {
-        if (this.winPanel == undefined) {
-            this.winPanel = new PIXI.Container;
-        }
-        this.addChild(this.winPanel);
-        this.winPanel.removeChildren();
-        let rect = graphic.rectangle(director.config.width, director.config.height);
-        this.winPanel.addChild(rect);
-        rect.interactive = true;
-        rect.alpha = 0.7;
-        let exit = new RectButton(180, 60, 0xff0000);
-        exit.text = "退出";
-        exit.clickHandler = () => {
-            director.sceneManager.replace(new SelectionScene());
-        }
-        exit.position.set(director.config.width / 2, 760);
-        this.winPanel.addChild(exit);
-    }
+    // renderGameOverUi() {
+    //     if (this.winPanel == undefined) {
+    //         this.winPanel = new PIXI.Container;
+    //     }
+    //     this.addChild(this.winPanel);
+    //     this.winPanel.removeChildren();
+    //     let rect = graphic.rectangle(director.config.width, director.config.height);
+    //     this.winPanel.addChild(rect);
+    //     rect.interactive = true;
+    //     rect.alpha = 0.7;
+    //     // let exit = new RectButton(180, 60, 0xff0000);
+    //     // exit.text = "退出";
+    //     // exit.clickHandler = () => {
+    //     //     director.sceneManager.replace(new SelectionScene());
+    //     // }
+    //     // exit.position.set(director.config.width / 2, 760);
 
-    renderGameOverUi2() {
-        // let playerRank = this.playerRank;
-        let l1 = new Label("恭喜你", { fontSize: 50, fill: 0xffd700 });
-        this.winPanel.addChild(l1);
-        l1.position.set(director.config.width / 2, 50);
+    //     let exit = display.normalButton('退 出');
+    //     exit.y = 750;
+    //     exit.clickHandler = () => director.sceneManager.replace(new SelectionScene());
+    //     this.winPanel.addChild(exit);
+    // }
 
-        let l2 = new Label("如果你获得第一名，还会解锁更多关卡，赶快去挑战吧！", { fontSize: 24, fill: 0xffd700 });
-        this.winPanel.addChild(l2);
-        l2.position.set(director.config.width / 2, 250);
+    // renderGameOverUi2() {
+    //     let playerRank = this.playerRank;
+    //     let l1 = new Label("恭喜你", { fontSize: 50, fill: 0xffd700 });
+    //     this.winPanel.addChild(l1);
+    //     l1.position.set(director.config.width / 2, 50);
 
+    //     let l2 = new Label("如果你获得第一名，还会解锁更多关卡，赶快去挑战吧！", { fontSize: 24, fill: 0xffd700 });
+    //     this.winPanel.addChild(l2);
+    //     l2.position.set(director.config.width / 2, 250);
+
+    //     lStorage.set('tutorial', 1);
+    //     if (director.user.isLogin)
+    //         director.request.post('update_user_tutorial');
+    // }
+
+    setWinPanelBtns() {
         lStorage.set('tutorial', 1);
         if (director.user.isLogin)
             director.request.post('update_user_tutorial');
+        this.winPanelInfo.title = "恭喜你"
+        this.winPanelInfo.l3 = "如果你获得第一名，还会解锁更多关卡，赶快去挑战吧！";
+        this.winPanelInfo.b1 = {
+            label: "退出",
+            handler: () => director.sceneManager.replace(new SelectionScene())
+        }
     }
 }

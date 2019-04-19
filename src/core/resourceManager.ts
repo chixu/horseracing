@@ -56,15 +56,24 @@ import { Resource } from "./resource";
 // }
 
 export class ResourceManager extends EventEmitter {
-  private resources: { [id: string]: Resource };
+  private resources: { [id: string]: any };
+  private spirtesheets: { [id: string]: any };
 
   constructor(public loader: PIXI.loaders.Loader = PIXI.loader) {
     super();
     this.loader.on('progress', (_, data: PIXI.loaders.Resource) => {
-      const resource = this.resources[data.name];
-      if (resource) {
-        resource.loaded(data);
-        this.emit("progress", resource);
+      console.log('pro', data)
+      let d = this.resources[data.name];
+      if (d) {
+        if (d.type == 'image')
+          d.data = data.texture;
+        else if (d.type == 'json')
+          d.data = data.data;
+        else if (d.type == 'spritesheet'){
+          for(let k in data.textures){
+            this.spirtesheets[k] = data.textures[k];
+          }
+        }
       }
     });
     this.loader.on('complete', (_, resources) => {
@@ -72,10 +81,21 @@ export class ResourceManager extends EventEmitter {
       this.emit("complete");
     });
     this.resources = {};
+    this.spirtesheets = {};
   }
 
-  resource(name: string): Resource {
-    return this.resources[name];
+  resource(name: string) {
+    if(this.resources[name])
+      return this.resources[name].data;
+    if(this.spirtesheets[name])
+      return this.spirtesheets[name];
+  }
+
+  createImage(name: string) {
+    let texture = this.resource(name);
+    console.log(texture);
+    let image = new PIXI.Sprite(texture);
+    return image;
   }
 
   texture(name: string): PIXI.Texture {
@@ -164,6 +184,14 @@ export class ResourceManager extends EventEmitter {
   //       return defaultValue;
   //   }
   // }
+  addResource(id, src, type) {
+    this.resources[id] = {
+      id: id,
+      src: src,
+      type: type
+    }
+    console.log(this.resources);
+  }
 
   add(resource: Resource) {
     resource.addTo(this.loader);
@@ -171,6 +199,10 @@ export class ResourceManager extends EventEmitter {
   }
 
   load() {
+    for (let k in this.resources) {
+      console.log(k, this.resources[k].src);
+      this.loader.add(k, this.resources[k].src);
+    }
     this.loader.load();
   }
 
@@ -200,24 +232,3 @@ export class ResourceManager extends EventEmitter {
     return this.loader.progress;
   }
 }
-
-// export type ResourceFactory = { create(def: Element): Resource };
-
-// let registry: { [id: string]: ResourceFactory } = {
-//   "atlas": Resource,
-//   "img": Resource,
-//   // "audio": AudioResource,
-//   "res": Resource
-//   // "sheet": SpritesheetResource,
-//   // "text": TextResource,
-//   // "json": TextResource,
-//   // "xml": TextResource
-// };
-
-// export function create(node: Element): Resource {
-//   let factory = registry[node.nodeName];
-//   if (factory) {
-//     return factory.create(node);
-//   }
-//   throw `not found the resource by ${node.nodeName}`;
-// }

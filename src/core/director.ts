@@ -12,6 +12,7 @@ import { ResourceManager } from "./resourceManager";
 import { Resource } from "./resource";
 import * as http from "../utils/http";
 import { SpriteSheetResource } from "./spriteSheetResource";
+import { MovieClipResource } from "./movieClipResource";
 // import { Candle } from "../component/candle";
 import { Socket } from "./socket";
 import { SceneManager } from "./sceneManager";
@@ -116,8 +117,9 @@ export function run() {
     if (config.env == 'dev') {
         // http.setCookie('username', 'winter002');
         // config.apiDomain = window.location.protocol + '//' + window.location.hostname + `/horseriding/api/`;
-        config.apiDomain = `http://localhost/game/`;
-        // constant.Request.gameStockInfo = "http://localhost/game/get_stock_info.php";
+        // config.apiDomain = `http://localhost/game/`;
+        config.apiDomain = window.location.origin + '/fakerequest/';
+        constant.Request.gameStockInfo = window.location.origin + '/fakerequest/stock_data.json';
     } else
         config.apiDomain = window.location.origin + `/game/`;
     // config.apiDomain = `http://localhost/horseriding/api/`;
@@ -146,18 +148,20 @@ export function run() {
     stage.pivot.set(config.width / 2, config.height / 2);
 
 
-    resourceManager.add(new Resource('star', './images/star.png'));
-    resourceManager.add(new Resource('lock', './images/lock.png'));
-    resourceManager.add(new SpriteSheetResource('rider', './images/hr.png', {
-        size: [64, 69],
-        width: 4,
-        frame: 16
-    }));
-    resourceManager.add(new SpriteSheetResource('horse', './images/h1.png', {
-        size: [64, 57],
-        width: 8,
-        frame: 64
-    }));
+    // resourceManager.add(new Resource('star', './images/star.png'));
+    // resourceManager.add(new Resource('lock', './images/lock.png'));
+    // resourceManager.add(new MovieClipResource('rider', './images/hr.png', {
+    //     size: [64, 69],
+    //     width: 4,
+    //     frame: 16
+    // }));
+    // resourceManager.add(new MovieClipResource('horse', './images/h1.png', {
+    //     size: [64, 57],
+    //     width: 8,
+    //     frame: 64
+    // }));
+    // resourceManager.addResource('btn_bg', './images/btn_bg.png', 'image');
+    resourceManager.addResource('spritesheet', './images/spritesheet.json', 'spritesheet');
     resourceManager.load();
     resourceManager.on("complete", () => {
         // console.log('loaded');
@@ -166,7 +170,7 @@ export function run() {
         // stage.addChild(image);
         let match = http.getQueryString('match');
         user.load().then(() => {
-            if(match && user.isLogin)
+            if (match && user.isLogin)
                 sceneManager.replace(new MatchListScene(match));
             else
                 sceneManager.replace(new SelectionScene());

@@ -11,6 +11,7 @@ import { Label } from "./core/component/label";
 import { RectButton } from "./core/component/rectButton";
 import * as http from "./utils/http";
 import * as date from "./utils/date";
+import * as display from "./utils/display";
 import * as graphic from "./utils/graphic";
 import { SelectionScene } from "./selectionScene";
 import * as math from "./utils/math";
@@ -19,6 +20,7 @@ import { SelfTrack } from "./component/selfTrack";
 import { SinglePlayerScene } from "./singlePlayerScene";
 import { RecordScene } from "./recordScene";
 import { IndexTrack } from "./component/indexTrack";
+import { DisplayObject } from "pixi.js";
 // import $ from "jquery";
 export const START_CASH = 100000;
 
@@ -47,6 +49,7 @@ export class MainScene extends Scene {
     axis: Axis;
     sideAxis: Axis;
     winPanel: PIXI.Container;
+    winPanelInfo: any;
     gameMode: GameMode;
     enabled: boolean;
     //inited: boolean = false;
@@ -60,9 +63,14 @@ export class MainScene extends Scene {
     showIndex: boolean = true;
     uploadingScore: boolean = true;
     horseButton: RectButton;
+    scoreLabelFontSize = 20;
 
     constructor(options) {
         super();
+        let bg = director.resourceManager.createImage('bg.png');
+        this.addChild(bg);
+        let topBar = director.resourceManager.createImage('main_top_panel.png');
+        this.addChild(topBar);
         this.sceneName = "单人游戏";
         this.options = options;
         this.gameMode = options.mode == undefined ? GameMode.Normal : options.mode;
@@ -70,16 +78,17 @@ export class MainScene extends Scene {
         // this.numTracks = 6;
         this.totalRound = options.r || 25;
         this.options.days = this.numHistoryPoints + this.totalRound + 1;
-        this.scoreLabel = new Label('', { align: 'left', fontSize: 23 });
-        this.scoreLabel.position.set(5, 5);
+        this.scoreLabel = new Label('', { align: 'left', fontSize: this.scoreLabelFontSize });
+        this.scoreLabel.position.set(12, 13);
         this.addChild(this.scoreLabel);
-        this.titleLabel = new Label('', { align: 'left', fontSize: 23 });
-        this.titleLabel.position.set(320, 5);
+        this.titleLabel = new Label('', { align: 'left', fontSize: this.scoreLabelFontSize });
+        this.titleLabel.position.set(295, 13);
         this.addChild(this.titleLabel);
 
         let horseButton = new RectButton(100, 40, 0x0000ff);
+        horseButton.rect.alpha = 0;
         horseButton.text = MainScene.renderHorse ? "K 线" : "赛 马";
-        horseButton.position.set(director.config.width - 50, 20)
+        horseButton.position.set(director.config.width - 40, 30)
         horseButton.clickHandler = () => {
             if (horseButton.text == "赛 马") {
                 horseButton.text = "K 线";
@@ -197,7 +206,7 @@ export class MainScene extends Scene {
             text += '  +' + inc.toFixed(2) + '%';
             color = 0xff0000;
         }
-        this.scoreLabel2 = new Label(text, { fontSize: 23, align: 'left', fill: color });
+        this.scoreLabel2 = new Label(text, { fontSize: this.scoreLabelFontSize, align: 'left', fill: color });
         this.scoreLabel2.position.set(this.scoreLabel.width, 0);
         this.scoreLabel.addChild(this.scoreLabel2);
         this.previousScore = value;
@@ -319,75 +328,111 @@ export class MainScene extends Scene {
     renderPlayers() {
     }
 
-    renderGameOverUi() {
-        if (this.winPanel == undefined) {
-            this.winPanel = new PIXI.Container;
-        }
-        this.addChild(this.winPanel);
-        this.winPanel.removeChildren();
-        let rect = graphic.rectangle(director.config.width, director.config.height);
-        this.winPanel.addChild(rect);
-        rect.interactive = true;
-        rect.alpha = 0.7;
-
-        let replay2 = new RectButton(180, 60, 0x11AA22);
-        replay2.text = "换股";
-        replay2.position.set(director.config.width / 2, 760);
-        replay2.clickHandler = () => {
-            this.removeChild(this.winPanel);
-            this.init();
-        }
-        this.winPanel.addChild(replay2);
-        let exit = new RectButton(180, 60, 0xff0000);
-        exit.text = "退出";
-        exit.clickHandler = () => {
-            director.sceneManager.replace(new SelectionScene());
-        }
-        exit.position.set(director.config.width / 2, 850);
-        this.winPanel.addChild(exit);
-
-        let rank = new RectButton(180, 60, 0x11AA22);
-        rank.position.set(director.config.width / 2, 670);
-        rank.text = director.user.isLogin ? "龙虎榜" : "登录";
-        rank.clickHandler = () => {
-            if (director.user.isLogin) {
-                director.sceneManager.push(new RecordScene());
-            } else {
-                director.user.showLogin(() => director.sceneManager.push(new RecordScene()));
+    setWinPanelBtns() {
+        this.winPanelInfo.b1 = {
+            label: '退出',
+            handler: () => {
+                director.sceneManager.replace(new SelectionScene());
             }
-        }
-        this.winPanel.addChild(rank);
-    }
-
-    renderGameOverUi2() {
-        let playerRank = this.playerRank;
-        let l1;
-        if (playerRank == 1)
-            l1 = new Label("恭喜你", { fontSize: 50, fill: 0xffd700 });
-        else
-            l1 = new Label("游戏结束", { fontSize: 50 });
-        this.winPanel.addChild(l1);
-        l1.position.set(director.config.width / 2, 50);
-
-        if (playerRank == 1) {
-            let l2 = new Label("赶快" + (director.user.isLogin ? "" : "登录海知账号") + "去龙虎榜看下你的排名吧!", { fontSize: 25, fill: 0xffd700 });
-            this.winPanel.addChild(l2);
-            l2.position.set(director.config.width / 2, 250);
-        }
-
-        if (playerRank == 1) {
+        };
+        this.winPanelInfo.b2 = {
+            label: '换股',
+            handler: () => {
+                this.removeChild(this.winPanel);
+                this.init();
+            }
+        };
+        this.winPanelInfo.b3 = {
+            label: director.user.isLogin ? "龙虎榜" : "登录",
+            handler: () => {
+                if (director.user.isLogin) {
+                    director.sceneManager.push(new RecordScene());
+                } else {
+                    director.user.showLogin(() => director.sceneManager.push(new RecordScene()));
+                }
+            }
+        };
+        if (this.playerRank == 1) {
             if (director.user.unlockedLevel == this.numTracks)
                 director.user.unlockedLevel++;
             if (director.user.unlockedLevel <= SinglePlayerScene.totalLevel) {
-                let next = new RectButton(180, 60, 0x11AA22);
-                next.text = "下一关";
-                next.position.set(director.config.width / 2, 580);
-                next.clickHandler = () => {
-                    director.sceneManager.replace(new MainScene({ n: director.user.unlockedLevel, mode: this.gameMode }));
+                this.winPanelInfo.b4 = {
+                    label: "下一关",
+                    handler: () => {
+                        director.sceneManager.replace(new MainScene({ n: director.user.unlockedLevel, mode: this.gameMode }));
+                    }
                 }
-                this.winPanel.addChild(next);
             }
         }
+    }
+
+    renderGameOverUi() {
+
+        // this.addChild(this.winPanel);
+        // this.winPanel.removeChildren();
+        // let rect = graphic.rectangle(director.config.width, director.config.height);
+        // this.winPanel.addChild(rect);
+        // rect.interactive = true;
+        // rect.alpha = 0.7;
+
+        // let replay2 = new RectButton(180, 60, 0x11AA22);
+        // replay2.text = "换股";
+        // replay2.position.set(director.config.width / 2, 760);
+        // replay2.clickHandler = () => {
+        //     this.removeChild(this.winPanel);
+        //     this.init();
+        // }
+        // this.winPanel.addChild(replay2);
+        // let exit = new RectButton(180, 60, 0xff0000);
+        // exit.text = "退出";
+        // exit.clickHandler = () => {
+        //     director.sceneManager.replace(new SelectionScene());
+        // }
+        // exit.position.set(director.config.width / 2, 850);
+        // this.winPanel.addChild(exit);
+
+        // let rank = new RectButton(180, 60, 0x11AA22);
+        // rank.position.set(director.config.width / 2, 670);
+        // rank.text = director.user.isLogin ? "龙虎榜" : "登录";
+        // rank.clickHandler = () => {
+        //     if (director.user.isLogin) {
+        //         director.sceneManager.push(new RecordScene());
+        //     } else {
+        //         director.user.showLogin(() => director.sceneManager.push(new RecordScene()));
+        //     }
+        // }
+        // this.winPanel.addChild(rank);
+    }
+
+    renderGameOverUi2() {
+        // let playerRank = this.playerRank;
+        // let l1;
+        // if (playerRank == 1)
+        //     l1 = new Label("恭喜你", { fontSize: 50, fill: 0xffd700 });
+        // else
+        //     l1 = new Label("游戏结束", { fontSize: 50 });
+        // this.winPanel.addChild(l1);
+        // l1.position.set(director.config.width / 2, 50);
+
+        // if (playerRank == 1) {
+        //     let l2 = new Label("赶快" + (director.user.isLogin ? "" : "登录海知账号") + "去龙虎榜看下你的排名吧!", { fontSize: 25, fill: 0xffd700 });
+        //     this.winPanel.addChild(l2);
+        //     l2.position.set(director.config.width / 2, 250);
+        // }
+
+        // if (playerRank == 1) {
+        //     if (director.user.unlockedLevel == this.numTracks)
+        //         director.user.unlockedLevel++;
+        //     if (director.user.unlockedLevel <= SinglePlayerScene.totalLevel) {
+        //         let next = new RectButton(180, 60, 0x11AA22);
+        //         next.text = "下一关";
+        //         next.position.set(director.config.width / 2, 580);
+        //         next.clickHandler = () => {
+        //             director.sceneManager.replace(new MainScene({ n: director.user.unlockedLevel, mode: this.gameMode }));
+        //         }
+        //         this.winPanel.addChild(next);
+        //     }
+        // }
     }
 
     gameOver(data?) {
@@ -395,18 +440,28 @@ export class MainScene extends Scene {
         // let percent = this.totalAmount / START_CASH - 1;
         // console.log('percent', percent);
         //let l2 = new Label(`您最后的收益率为${(percent * 100).toFixed(2)}%\n击败了${(1 / (1 + Math.pow(2, -30 * percent)) * 100).toFixed(2)}%的玩家`, { fontSize: 40 });
-        this.renderGameOverUi();
+        // this.renderGameOverUi();
         // let rank = '';
         // let playerRank;
 
         // console.log(rank);
-        let l3 = new Label(this.getPlayerRank(), { fontSize: 28 });
-        this.winPanel.addChild(l3);
-        l3.position.set(director.config.width / 2, 410);
+        if (this.winPanel != undefined) {
+            // this.winPanel = new PIXI.Container;
+            this.removeChild(this.winPanel);
+        }
+        let mainTxt = this.getPlayerRank();
+        this.winPanelInfo = {
+            l1: `您最后的收益率为${this.profit.toFixed(2)}%`,
+            l2: `赛场排名第${this.playerRank}`,
+            maintxt: mainTxt
+        }
+        // let l3 = new Label(this.getPlayerRank(), { fontSize: 28 });
+        // this.winPanel.addChild(l3);
+        // l3.position.set(director.config.width / 2, 410);
 
-        let l2 = new Label(`您最后的收益率为${this.profit.toFixed(2)}%\n赛场排名第${this.playerRank}`, { fontSize: 40, fill: 0xffffff });
-        this.winPanel.addChild(l2);
-        l2.position.set(director.config.width / 2, 170);
+        // let l2 = new Label(``, { fontSize: 40, fill: 0xffffff });
+        // this.winPanel.addChild(l2);
+        // l2.position.set(director.config.width / 2, 170);
 
         //upload score
         if (this.uploadingScore) {
@@ -429,8 +484,14 @@ export class MainScene extends Scene {
         //         l4.position.set(director.config.width / 2, 270);
         //     }
         // })
+
         this.gameOverTracker();
-        this.renderGameOverUi2();
+        this.winPanelInfo.title = this.playerRank == 1 ? "恭喜你" : "游戏结束";
+        this.winPanelInfo.l3 = this.playerRank == 1 ? ("赶快" + (director.user.isLogin ? "" : "登录海知账号") + "去龙虎榜看下你的排名吧!") : "";
+        this.setWinPanelBtns();
+        this.winPanel = display.congratsPanel(this.winPanelInfo);
+        this.addChild(this.winPanel);
+        // this.renderGameOverUi2();
     }
 
     getPlayerRank() {
